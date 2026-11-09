@@ -2,75 +2,117 @@
 {% from 'partials/macros.html' import csrf %}
 {% block title %}{{ 'Sửa' if product.id else 'Thêm' }} sản phẩm{% endblock %}
 {% block admin_content %}
-<div class="welcome-header"><h2>{{ 'Sửa sản phẩm' if product.id else 'Thêm sản phẩm' }}</h2></div>
-<form method="post" class="form-card wide">
+<div class="welcome-header">
+    <h2>{{ 'Sửa sản phẩm' if product.id else 'Thêm sản phẩm' }}</h2>
+</div>
+
+<form method="post" enctype="multipart/form-data" id="productForm" class="pf">
     {{ csrf() }}
-    <label>Tên sản phẩm *<input name="name" value="{{ product.name or '' }}" required maxlength="200"></label>
-    <label>Mã sản phẩm *<input name="product_code" value="{{ product.product_code or '' }}" required maxlength="50"></label>
-    <label>Đường dẫn (slug) <small class="muted">để trống sẽ tự tạo từ tên</small><input name="slug" value="{{ product.slug or '' }}" maxlength="200"></label>
-    <label>Danh mục *
-        <select name="category_id" required>
-            <option value="">-- Chọn --</option>
-            {% for c in categories %}
-            <option value="{{ c.id }}" {{ 'selected' if c.id == product.category_id }}>{{ c.name }}</option>
+    <input type="hidden" name="variants_managed" value="1">
+    <input type="hidden" name="images_managed" value="1">
+    <input type="hidden" name="primary" id="pfPrimary">
+    <div id="pfKeep"></div>
+
+    <div class="pf-errors" id="pfErrors" role="alert" hidden></div>
+
+    <section class="pf-sec">
+        <h3>1. Thông tin sản phẩm</h3>
+        <div class="pf-grid">
+            <label class="pf-full">Tên sản phẩm *
+                <input name="name" value="{{ data.name }}" required maxlength="200" autofocus></label>
+            <label>Mã sản phẩm *
+                <input name="product_code" value="{{ data.product_code }}" required maxlength="50"></label>
+            <label>Danh mục *
+                <select name="category_id" required>
+                    <option value="">-- Chọn --</option>
+                    {% for c in categories %}
+                    <option value="{{ c.id }}" {{ 'selected' if c.id|string == data.category_id|string }}>{{ c.name }}</option>
+                    {% endfor %}
+                </select></label>
+            <label>Thương hiệu
+                <select name="brand_id"><option value="">-- Không --</option>
+                    {% for b in brands %}<option value="{{ b.id }}" {{ 'selected' if b.id|string == data.brand_id|string }}>{{ b.name }}</option>{% endfor %}
+                </select></label>
+            <label>Chất liệu
+                <input name="material" value="{{ data.material }}" maxlength="255"></label>
+            <label>Xuất xứ
+                <input name="origin" value="{{ data.origin }}" maxlength="100"></label>
+            <label class="pf-full">Mô tả
+                <textarea name="description" rows="4">{{ data.description }}</textarea></label>
+            <label class="check pf-full"><input type="checkbox" name="is_active" value="1" {{ 'checked' if data.is_active }}> Hiển thị trên website</label>
+            <input type="hidden" name="slug" value="{{ data.slug }}">
+        </div>
+    </section>
+
+    <section class="pf-sec">
+        <h3>2. Giá bán</h3>
+        <div class="pf-grid">
+            <label>Giá (₫) *
+                <input type="number" name="price" id="pfPrice" min="0" step="1" inputmode="numeric" value="{{ data.price }}" required></label>
+            <label>Giá khuyến mãi (₫)
+                <input type="number" name="sale_price" id="pfSale" min="0" step="1" inputmode="numeric" value="{{ data.sale_price }}"></label>
+        </div>
+        <p class="pf-hint" id="pfPriceHint"></p>
+    </section>
+
+    <section class="pf-sec">
+        <h3>3. Kích cỡ, màu sắc &amp; tồn kho</h3>
+        <div class="pf-quick">
+            <label>Nhập size (VD:38-43)
+                <input id="pfQuickSizes" autocomplete="off"></label>
+            <label>Màu
+                <input id="pfQuickColor" placeholder="VD: Đen" maxlength="50" autocomplete="off"></label>
+            <label>Tồn kho
+                <input id="pfQuickStock" type="number" min="0" value="10" inputmode="numeric"></label>
+            <button type="button" class="btn-light" id="pfQuickAdd">Tạo các dòng</button>
+        </div>
+        <div class="table-scroll pf-table-wrap"><table class="pf-table">
+            <thead><tr><th>Size *</th><th>Màu</th><th>Tồn kho</th><th></th></tr></thead>
+            <tbody id="pfVariants">
+            {% for v in variants %}
+            <tr>
+                <td><input type="hidden" name="variant_id" value="{{ v.id }}"><input name="variant_size" value="{{ v.size }}" maxlength="20" placeholder="VD: 41"></td>
+                <td><input name="variant_color" value="{{ v.color }}" maxlength="50" placeholder="Không bắt buộc"></td>
+                <td><input type="number" name="variant_stock" value="{{ v.stock }}" min="0" inputmode="numeric" placeholder="0"></td>
+                <td><button type="button" class="btn-danger pf-del" aria-label="Xóa dòng này">Xóa</button></td>
+            </tr>
             {% endfor %}
-        </select>
-    </label>
-    <label>Thương hiệu
-        <select name="brand_id"><option value="">-- Không --</option>
-        {% for b in brands %}<option value="{{ b.id }}" {{ 'selected' if b.id == product.brand_id }}>{{ b.name }}</option>{% endfor %}</select></label>
-    <label>Giá (₫) *<input type="number" name="price" min="0" step="1" value="{{ product.price|int if product.price is not none else '' }}" required></label>
-    <label>Giá khuyến mãi (₫)<input type="number" name="sale_price" min="0" step="1" value="{{ product.sale_price|int if product.sale_price is not none else '' }}"></label>
-    <label>Chất liệu<input name="material" value="{{ product.material or '' }}" maxlength="255"></label>
-    <label>Xuất xứ<input name="origin" value="{{ product.origin or '' }}" maxlength="100"></label>
-    <label>Mô tả<textarea name="description" rows="5">{{ product.description or '' }}</textarea></label>
-    <label class="check"><input type="checkbox" name="is_active" value="1" {{ 'checked' if product.is_active }}> Hiển thị trên website</label>
-    <button type="submit" class="btn-dark" data-loading-text="Đang lưu...">Lưu sản phẩm</button>
-    <a class="btn-light" href="{{ url_for('admin.products') }}">Quay lại</a>
+            </tbody>
+        </table></div>
+        <p class="empty-state" id="pfVariantsEmpty" hidden>Chưa có kích cỡ. Sản phẩm cần ít nhất một kích cỡ để khách có thể mua.</p>
+        <div class="pf-row-foot">
+            <button type="button" class="btn-light" id="pfAddRow">+ Thêm dòng</button>
+        </div>
+        <template id="pfRowTpl">
+            <tr>
+                <td><input type="hidden" name="variant_id" value=""><input name="variant_size" maxlength="20" placeholder="VD: 41"></td>
+                <td><input name="variant_color" maxlength="50" placeholder="Không bắt buộc"></td>
+                <td><input type="number" name="variant_stock" min="0" inputmode="numeric" placeholder="0"></td>
+                <td><button type="button" class="btn-danger pf-del" aria-label="Xóa dòng này">Xóa</button></td>
+            </tr>
+        </template>
+    </section>
+
+    <section class="pf-sec">
+        <h3>4. Hình ảnh</h3>
+        <label class="pf-drop" id="pfDrop" for="pfFile">
+            <strong>Bấm để chọn ảnh</strong> hoặc kéo thả nhiều ảnh vào đây
+            <small>JPG, PNG, WEBP · tối đa {{ max_image_mb }}MB mỗi ảnh · tối đa {{ max_images }} ảnh</small>
+        </label>
+        <input type="file" name="images" id="pfFile" accept="image/jpeg,image/png,image/webp" multiple hidden>
+        <p class="pf-hint pf-err" id="pfImgMsg" role="alert" hidden></p>
+        {% if had_error %}<p class="pf-hint">Nếu bạn vừa chọn ảnh mới, vui lòng chọn lại ảnh sau khi sửa lỗi.</p>{% endif %}
+        <div class="pf-tiles" id="pfTiles"></div>
+    </section>
+
+    <div class="pf-actions">
+        <button type="submit" name="after" value="list" class="btn-dark" data-loading-text="Đang lưu...">Lưu sản phẩm</button>
+        {% if product.id %}<button type="submit" name="after" value="stay" class="btn-light" data-loading-text="Đang lưu...">Lưu &amp; ở lại trang</button>{% endif %}
+        <button type="submit" name="after" value="new" class="btn-light" data-loading-text="Đang lưu...">Lưu &amp; thêm sản phẩm khác</button>
+        <a class="btn-light" href="{{ url_for('admin.products') }}" id="pfCancel">Quay lại</a>
+    </div>
 </form>
 
-{% if product.id %}
-<div class="recent-activity">
-    <h3>Kích cỡ, màu sắc &amp; tồn kho</h3>
-    <div class="table-scroll"><table>
-        <thead><tr><th>Size</th><th>Màu</th><th>Tồn kho</th><th></th></tr></thead>
-        <tbody>
-        {% for v in product.variants %}
-        <tr><td>{{ v.size }}</td><td>{{ v.color or '—' }}</td>
-            <td><form method="post" action="{{ url_for('admin.variant_update', variant_id=v.id) }}" class="inline-form">
-                {{ csrf() }}<input type="number" name="stock_quantity" min="0" value="{{ v.stock_quantity }}" class="narrow-input"> <button class="btn-light" data-no-loading>Lưu</button></form></td>
-            <td><form method="post" action="{{ url_for('admin.variant_delete', variant_id=v.id) }}" data-confirm="Xóa biến thể này?">{{ csrf() }}<button class="btn-danger" data-no-loading>Xóa</button></form></td></tr>
-        {% else %}<tr><td colspan="4" class="empty-state">Chưa có biến thể. Sản phẩm cần ít nhất một kích cỡ để bán.</td></tr>{% endfor %}
-        </tbody></table></div>
-    <form method="post" action="{{ url_for('admin.variant_add', product_id=product.id) }}" class="inline-grid">
-        {{ csrf() }}
-        <input name="size" placeholder="Size *" required maxlength="20">
-        <input name="color" placeholder="Màu (tuỳ chọn)" maxlength="50">
-        <input type="number" name="stock_quantity" min="0" placeholder="Tồn kho *" required>
-        <button class="btn-dark" data-no-loading>Thêm biến thể</button>
-    </form>
-</div>
+<script type="application/json" id="pfConfig">{{ {'images': images, 'maxImages': max_images, 'maxMb': max_image_mb} | tojson }}</script>
 
-<div class="recent-activity">
-    <h3>Hình ảnh sản phẩm</h3>
-    <div class="admin-images">
-        {% for img in product.images %}
-        <div class="admin-img">
-            <img src="{{ url_for('static', filename=img.image_url) }}" alt="">
-            {% if img.is_primary %}<span class="status status-confirmed">Ảnh chính</span>{% endif %}
-            <div class="row-actions">
-                {% if not img.is_primary %}
-                <form method="post" action="{{ url_for('admin.image_primary', image_id=img.id) }}">{{ csrf() }}<button class="btn-light" data-no-loading>Đặt làm chính</button></form>{% endif %}
-                <form method="post" action="{{ url_for('admin.image_delete', image_id=img.id) }}" data-confirm="Xóa ảnh này?">{{ csrf() }}<button class="btn-danger" data-no-loading>Xóa</button></form>
-            </div>
-        </div>
-        {% else %}<p class="empty-state">Chưa có ảnh. Website sẽ hiển thị ảnh thay thế.</p>{% endfor %}
-    </div>
-    <form method="post" action="{{ url_for('admin.image_upload', product_id=product.id) }}" enctype="multipart/form-data" class="inline-grid">
-        {{ csrf() }}
-        <input type="file" name="image" accept="image/jpeg,image/png,image/webp" required>
-        <button class="btn-dark" data-loading-text="Đang tải lên...">Tải ảnh lên (≤ 5MB)</button>
-    </form>
-</div>
-{% endif %}
 {% endblock %}

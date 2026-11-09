@@ -1,8 +1,6 @@
 {% extends 'base.html' %}
 {% block title %}Giới thiệu - TUẤN | Belief in the difference{% endblock %}
 
-{% from 'partials/photo_wall.html' import photo_wall %}
-
 {% macro pic(name, alt='') -%}
 <img src="{{ url_for('static', filename='images/aboutme/' ~ name) }}" alt="{{ alt }}" loading="lazy"
     onerror="this.style.visibility='hidden'">
@@ -18,12 +16,11 @@
 {% block content %}
 <main class="ab">
 
-    <!-- HERO -->
+    <!-- HERO  -->
     <section class="ab-hero" id="story">
         <div class="ab-hero-bg">{{ pic('tamhuyet.jpg', 'Đôi tay người thợ khâu giày da thủ công') }}</div>
         <div class="ab-hero-inner">
-            <p class="ab-eyebrow ab-eyebrow--light">TUẤN GIÀY</p>
-            <h1 class="ab-hero-title ab-hero-title--long">HƠN 48 NĂM GÌN GIỮ<br>NGHỀ GIÀY, KIẾN TẠO<br>GIÁ TRỊ BỀN VỮNG</h1>
+            <h1 class="ab-hero-title">Hơn 48 năm <br>bền bỉ cùng thời gian</h1>
             <p class="ab-hero-text">Từ đôi bàn tay người thợ đến quy trình sản xuất hiện đại, Tuấn Giày đồng hành cùng khách hàng, đại lý và đối tác phân phối bằng chất lượng và sự tin cậy.</p>
         </div>
     </section>
@@ -34,80 +31,64 @@
             <li>
                 <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M5 42V20l11-7v7l11-7v7l11-7v29M5 42h38M13 42v-8h6v8M25 42v-8h6v8M35 42v-8h4v8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
                 <span class="ab-stats-label">Nhà xưởng</span>
-                <b>~ 5.000 m²</b>
-                <small>quy mô sản xuất</small>
+                <b>5.000 m²</b>
             </li>
             <li>
                 <svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="6" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M24 4v6M24 38v6M4 24h6M38 24h6M9.9 9.9l4.2 4.2M33.9 33.9l4.2 4.2M9.9 38.1l4.2-4.2M33.9 14.1l4.2-4.2" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="24" cy="24" r="13" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
                 <span class="ab-stats-label">Máy móc hiện đại</span>
                 <b>100+</b>
-                <small>máy cắt, may, ép, hoàn thiện…</small>
             </li>
             <li>
                 <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M6 8h36v10H6zM6 22h36v10H6zM6 36h36v6H6zM12 13h6M12 27h6M30 13h8M30 27h8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/></svg>
                 <span class="ab-stats-label">Sản lượng</span>
-                <b>~ 50.000 đôi/tháng</b>
-                <small>(tùy theo đơn hàng)</small>
+                <b>50.000 đôi/tháng</b>
             </li>
             <li>
                 <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 5l17 9v20l-17 9-17-9V14zM7 14l17 9 17-9M24 23v20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
                 <span class="ab-stats-label">Mẫu mã</span>
                 <b>300+</b>
-                <small>mẫu giày đa dạng</small>
             </li>
             <li>
                 <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 5l15 5v12c0 10-7 17-15 21C16 39 9 32 9 22V10z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M17 24l5 5 9-10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
                 <span class="ab-stats-label">Quy trình tối ưu</span>
                 <b class="ab-stats-text">Kiểm soát chất lượng</b>
-                <small>từ đầu vào đến đầu ra</small>
             </li>
         </ul>
     </section>
 
     <!-- 01 HÀNH TRÌNH HƠN 48 NĂM -->
-    <section class="ab-sec ab-heritage ab-heritage--long ab-prose" id="heritage">
-        <header class="ab-head">
-            <p class="ab-eyebrow"><b>01</b><i></i>KHỞI NGUỒN</p>
-            <h2 class="ab-h2">HÀNH TRÌNH HƠN 48 NĂM</h2>
-            <p class="ab-sub">Khởi nguồn từ đôi bàn tay người thợ</p>
-        </header>
-        <div class="ab-heritage-text">
+    <section class="ab-sec ab-drop" id="heritage">
+        <div class="ab-drop-cards">
+            <figure class="ab-card ab-card--a">{{ pic('NX.jpg', 'Xưởng giày TUẤN thuở ban đầu') }}</figure>
+            <figure class="ab-card ab-card--b">{{ pic('DT.jpg', 'Người thợ thao tác trên chất liệu da') }}</figure>
+        </div>
+        <div class="ab-drop-text">
+            <h2 class="ab-h2">Hành trình<br>hơn 48 năm</h2>
             <p class="ab-body">Hơn 48 năm trước, Tuấn Giày khởi đầu từ nghề làm giày truyền thống tại Huế, nơi từng đôi giày được tạo nên bằng sự tỉ mỉ, kiên nhẫn và lòng trân trọng nghề.</p>
             <p class="ab-body">Từ chọn vật liệu, cắt da, tạo phom, may ráp đến hoàn thiện, mỗi công đoạn đều cần người thợ hiểu chất liệu và kiểm soát từng chi tiết. Từ nền tảng ấy, chúng tôi xây dựng uy tín bằng chất lượng sản phẩm và sự tin tưởng của khách hàng.</p>
-        </div>
-        <div class="ab-heritage-photos">
-            <figure>{{ pic('NX.jpg', 'Xưởng giày TUẤN thuở ban đầu') }}</figure>
-            <figure>{{ pic('DT.jpg', 'Người thợ thao tác trên chất liệu da') }}</figure>
         </div>
     </section>
 
     <!-- 02 TỪ THỦ CÔNG ĐẾN HIỆN ĐẠI -->
-    <section class="ab-sec ab-capacity ab-capacity--long ab-prose" id="craft">
-        <header class="ab-head">
-            <p class="ab-eyebrow"><b>02</b><i></i>TRUYỀN THỐNG &amp; HIỆN ĐẠI</p>
-            <h2 class="ab-h2">TỪ THỦ CÔNG TRUYỀN THỐNG<br>ĐẾN SẢN XUẤT HIỆN ĐẠI</h2>
-        </header>
-        <figure class="ab-capacity-big">{{ pic('KG.jpg', 'Không gian nhà xưởng sản xuất của TUẤN') }}</figure>
-        <div class="ab-capacity-text">
+    <section class="ab-sec ab-about" id="craft">
+        <div class="ab-collage">
+            <figure class="ab-collage-main">{{ pic('KG.jpg', 'Không gian nhà xưởng sản xuất của TUẤN') }}</figure>
+            <figure class="ab-collage-a">{{ pic('DN.jpg', 'Đội ngũ nhân lực sản xuất') }}</figure>
+            <figure class="ab-collage-b">{{ pic('MM.jpg', 'Máy móc trong dây chuyền sản xuất') }}</figure>
+        </div>
+        <div class="ab-about-text">
+            <h2 class="ab-h2">Từ thủ công truyền thống<br>đến sản xuất hiện đại</h2>
             <p class="ab-body">Nhu cầu thị trường ngày càng đa dạng, số lượng và tiến độ giao hàng ngày càng cao. Tuấn Giày phát triển trên nền tảng kinh nghiệm truyền thống, đồng thời từng bước ứng dụng sản xuất hiện đại để nâng cao hiệu suất và tính ổn định.</p>
             <p class="ab-body">Các công đoạn cắt, may ráp, tạo phom, lắp đế và hoàn thiện được tổ chức theo trình tự rõ ràng. Máy móc chuyên dụng giúp thao tác chính xác hơn, còn kinh nghiệm của người thợ vẫn quyết định chất lượng từng chi tiết.</p>
             <p class="ab-body">Hiện đại hóa không có nghĩa là đánh mất truyền thống: công nghệ chỉ có ý nghĩa khi giúp tay nghề được phát huy tốt hơn.</p>
         </div>
-        <div class="ab-capacity-side">
-            <figure>{{ pic('DN.jpg', 'Đội ngũ nhân lực sản xuất') }}</figure>
-            <figure>{{ pic('MM.jpg', 'Máy móc trong dây chuyền sản xuất') }}</figure>
-        </div>
     </section>
 
     <!-- 03 NĂNG LỰC SẢN XUẤT -->
-    <section class="ab-sec ab-three ab-prose" id="capacity">
-        <div class="ab-three-head">
-            <div>
-                <p class="ab-eyebrow"><b>03</b><i></i>NĂNG LỰC SẢN XUẤT</p>
-                <h2 class="ab-h2">NĂNG LỰC SẢN XUẤT</h2>
-            </div>
-            </div>
-        </div>
+    <section class="ab-sec ab-three" id="capacity">
+        <header class="ab-three-head">
+            <h2 class="ab-h2">Năng lực sản xuất</h2>
+        </header>
         <div class="ab-three-grid">
             <article>
                 <h3 class="ab-h3">Quy trình tổ chức khoa học</h3>
@@ -125,7 +106,7 @@
     </section>
 
     <!-- 04 CON NGƯỜI -->
-    <section class="ab-bulk ab-bulk--long ab-prose" id="people">
+    <section class="ab-bulk" id="people">
         <figure class="ab-bulk-img">{{ pic('CN.jpg', 'Đội ngũ và sản phẩm của Tuấn Giày') }}</figure>
         <div class="ab-bulk-panel">
             <svg class="ab-bulk-globe" viewBox="0 0 200 200" aria-hidden="true">
@@ -135,25 +116,18 @@
                 </g>
             </svg>
             <div class="ab-bulk-inner">
-                <p class="ab-eyebrow ab-eyebrow--light"><b>04</b><i></i>CON NGƯỜI</p>
-                <h2 class="ab-h2 ab-h2--light">CON NGƯỜI<br>GIÁ TRỊ CỐT LÕI PHÍA SAU<br>MỖI SẢN PHẨM</h2>
-                <p class="ab-body ab-body--light">Đằng sau một đôi giày hoàn chỉnh là sự phối hợp của nhiều vị trí: người chọn vật liệu, người gia công, bộ phận kiểm tra chất lượng và những người quản lý đơn hàng, giao nhận.</p>
-                <p class="ab-body ab-body--light">Với hơn 48 năm kinh nghiệm, Tuấn Giày đề cao tay nghề, kỷ luật và tinh thần trách nhiệm. Chất lượng ổn định không đến từ một cá nhân, mà từ sự phối hợp đồng bộ giữa con người, thiết bị và phương pháp vận hành.</p>
+                <h2 class="ab-bulk-title">CON NGƯỜI<br>GIÁ TRỊ CỐT LÕI PHÍA SAU<br>MỖI SẢN PHẨM</h2>
+                <p class="ab-bulk-text">Đằng sau một đôi giày hoàn chỉnh là sự phối hợp của nhiều vị trí: người chọn vật liệu, người gia công, bộ phận kiểm tra chất lượng và những người quản lý đơn hàng, giao nhận.</p>
+                <p class="ab-bulk-text">Với hơn 48 năm kinh nghiệm, Tuấn Giày đề cao tay nghề, kỷ luật và tinh thần trách nhiệm. Chất lượng ổn định không đến từ một cá nhân, mà từ sự phối hợp đồng bộ giữa con người, thiết bị và phương pháp vận hành.</p>
             </div>
         </div>
     </section>
 
     <!-- 05 GIẢI PHÁP CUNG ỨNG SỈ -->
-    <section class="ab-sec ab-three ab-prose" id="wholesale">
-        <div class="ab-three-head">
-            <div>
-                <p class="ab-eyebrow"><b>05</b><i></i>CUNG ỨNG SỈ</p>
-                <h2 class="ab-h2">GIẢI PHÁP CUNG ỨNG SỈ</h2>
-                <p class="ab-sub">Đồng hành cùng đại lý và đối tác phân phối</p>
-            </div>
-            <div>
-            </div>
-        </div>
+    <section class="ab-sec ab-three" id="wholesale">
+        <header class="ab-three-head">
+            <h2 class="ab-h2">Giải pháp cung ứng sỉ</h2>
+        </header>
         <div class="ab-three-grid">
             <article>
                 <h3 class="ab-h3">Đa dạng theo nhu cầu thị trường</h3>
@@ -171,76 +145,60 @@
     </section>
 
     <!-- 06 TRẢI NGHIỆM VƯỢT MONG ĐỢI -->
-    {# Mỗi cột: dir = up/down (hướng chạy), dur = số giây một vòng, photos = (tên ảnh trong static/images, tỉ lệ khung) #}
-    {% set wall_cols = [
-        {'dir': 'up',   'dur': 34, 'photos': [('1.jpg', '3/4'), ('2.jpg', '2/3'), ('3.jpg', '4/5')]},
-        {'dir': 'down', 'dur': 35, 'photos': [('4.jpg', '4/5'), ('5.jpg', '3/4'), ('6.jpg', '2/3')]},
-        {'dir': 'up',   'dur': 26, 'photos': [('7.jpg', '4/5'), ('8.jpg', '3/4'), ('9.jpg', '2/3')]}
-    ] %}
-    <section class="ab-sec ab-exp ab-prose" id="experience">
-        <div class="ab-exp-head">
-            <div class="ab-exp-title">
-                <p class="ab-eyebrow"><b>06</b><i></i>TRẢI NGHIỆM KHÁCH HÀNG</p>
-                <h2 class="ab-h2">TRẢI NGHIỆM<br>VƯỢT MONG ĐỢI</h2>
-                <p class="ab-sub">Giá trị được khẳng định từ khách hàng</p>
-            </div>
-            <div class="ab-exp-copy">
-                <p class="ab-body">Giá trị của một thương hiệu không chỉ nằm ở những gì doanh nghiệp giới thiệu, mà còn ở trải nghiệm thực tế của người đã chọn sản phẩm và dịch vụ: đôi giày phù hợp, tư vấn tận tình, quy trình rõ ràng.</p>
-                <p class="ab-body">Với Tuấn Giày, mỗi phản hồi của khách hàng là cơ hội để nhìn lại điều đã làm tốt và tiếp tục hoàn thiện chất lượng phục vụ.</p>
+    <section class="xp" id="experience" aria-labelledby="xp-title">
+        <div class="xp-track">
+            <div class="xp-pin">
+                <div class="xp-stage">
+                    <figure class="xp-ph xp-c">
+                        {{ pic('Trainghiem/5.jpg', 'Khách hàng trải nghiệm sản phẩm của Tuấn Giày') }}
+                        <span class="xp-shade" aria-hidden="true"></span>
+                        <figcaption class="xp-copy">
+                            <h2 class="xp-title" id="xp-title">Trải nghiệm<br>vượt mong đợi</h2>
+                        </figcaption>
+                    </figure>
+                    <figure class="xp-ph xp-l1" data-d="0.04">{{ pic('Trainghiem/1.jpg', 'Trải nghiệm sản phẩm Tuấn Giày') }}</figure>
+                    <figure class="xp-ph xp-l2" data-d="0.14">{{ pic('Trainghiem/2.jpg', 'Trải nghiệm sản phẩm Tuấn Giày') }}</figure>
+                    <figure class="xp-ph xp-l3" data-d="0.22">{{ pic('Trainghiem/3.jpg', 'Trải nghiệm sản phẩm Tuấn Giày') }}</figure>
+                    <figure class="xp-ph xp-r1" data-d="0.08">{{ pic('Trainghiem/4.jpg', 'Trải nghiệm sản phẩm Tuấn Giày') }}</figure>
+                    <figure class="xp-ph xp-r2" data-d="0.24">{{ pic('Trainghiem/6.jpg', 'Trải nghiệm sản phẩm Tuấn Giày') }}</figure>
+                    <figure class="xp-ph xp-r3" data-d="0.00">{{ pic('Trainghiem/7.jpg', 'Trải nghiệm sản phẩm Tuấn Giày') }}</figure>
+                    <figure class="xp-ph xp-e1" data-d="0.20">{{ pic('Trainghiem/8.jpg', 'Trải nghiệm sản phẩm Tuấn Giày') }}</figure>
+                    <figure class="xp-ph xp-e2" data-d="0.18">{{ pic('Trainghiem/9.jpg', 'Trải nghiệm sản phẩm Tuấn Giày') }}</figure>
+                </div>
             </div>
         </div>
-        {{ photo_wall(wall_cols, 'Hình ảnh trải nghiệm sản phẩm và xưởng thủ công của Giày Tuấn') }}
-
-        {% if show_reviews %}
-        <h3 class="ab-h3 ab-h3--center">Những trải nghiệm được khách hàng ghi nhận</h3>
-        <div class="ab-reviews">
-            <figure class="ab-review">
-                <p class="ab-stars" aria-label="5 sao">★★★★★</p>
-                <figcaption class="ab-review-title">Chất lượng sản phẩm</figcaption>
-                <blockquote>“<span class="ab-todo">[Nhận xét thực tế của khách hàng về chất lượng, độ hoàn thiện.]</span>”</blockquote>
-                <p class="ab-review-by">— Khách hàng: <span class="ab-todo">[Tên hiển thị]</span></p>
-            </figure>
-            <figure class="ab-review">
-                <p class="ab-stars" aria-label="5 sao">★★★★★</p>
-                <figcaption class="ab-review-title">Trải nghiệm mua hàng</figcaption>
-                <blockquote>“<span class="ab-todo">[Nhận xét thực tế về tư vấn, thái độ phục vụ.]</span>”</blockquote>
-                <p class="ab-review-by">— Khách hàng: <span class="ab-todo">[Tên hiển thị]</span></p>
-            </figure>
-            <figure class="ab-review">
-                <p class="ab-stars" aria-label="5 sao">★★★★★</p>
-                <figcaption class="ab-review-title">Trải nghiệm đặt hàng sỉ</figcaption>
-                <blockquote>“<span class="ab-todo">[Phản hồi thực tế từ đại lý hoặc đối tác.]</span>”</blockquote>
-                <p class="ab-review-by">— Đối tác: <span class="ab-todo">[Tên đơn vị, nếu được phép công khai]</span></p>
-            </figure>
-        </div>
-        {% endif %}
-    </section>
 
     <!-- 07 KHÔNG NGỪNG ĐỔI MỚI -->
-    <section class="ab-sec ab-ach ab-ach--long ab-prose" id="achievements">
-        <div class="ab-ach-text">
-            <div class="ab-ach-head">
-                <p class="ab-eyebrow"><b>07</b><i></i>ĐỔI MỚI</p>
-                <h2 class="ab-h2">KHÔNG NGỪNG ĐỔI MỚI<br>ĐỂ PHÁT TRIỂN BỀN VỮNG</h2>
-                <p class="ab-sub">Hơn 48 năm là chặng đường đáng trân trọng, và cũng là động lực để Tuấn Giày tiếp tục đổi mới.</p>
-            </div>
-            <ol class="ab-timeline">
-                <li><b>1978</b><span>KHỞI NGUỒN</span></li>
-                <li><span>PHÁT TRIỂN</span></li>
-                <li><span>KHẲNG ĐỊNH</span></li>
-                <li><b>2026</b><span>VƯƠN XA</span></li>
-            </ol>
-            <div class="ab-ach-body">
-                <p class="ab-body"><strong>Sản phẩm.</strong> Giữ nền tảng kinh nghiệm, đồng thời cải tiến mẫu mã và chất lượng theo yêu cầu mới của thị trường.</p>
-                <p class="ab-body"><strong>Quy trình.</strong> Hoàn thiện cách tổ chức sản xuất và quản lý để nâng cao hiệu quả, tốc độ cung ứng và khả năng thích ứng.</p>
-                <p class="ab-body"><strong>Dịch vụ.</strong> Từ tiếp nhận nhu cầu đến hoàn thiện đơn hàng, mỗi bước là cơ hội tạo thêm giá trị cho khách hàng.</p>
-            </div>
+    <section class="ab-sec ab-ach" id="achievements">
+        <header class="ab-ach-head">
+            <h2 class="ab-h2">Không ngừng đổi mới<br>để phát triển bền vững</h2>
+            <p class="ab-sub">Hơn 48 năm là chặng đường đáng trân trọng, và cũng là động lực để Tuấn Giày tiếp tục đổi mới.</p>
+        </header>
+        <ol class="ab-timeline">
+            <li><b>1978</b><span>KHỞI NGUỒN</span></li>
+            <li><span>PHÁT TRIỂN</span></li>
+            <li><span>KHẲNG ĐỊNH</span></li>
+            <li><b>2026</b><span>VƯƠN XA</span></li>
+        </ol>
+        <div class="ab-three-grid">
+            <article>
+                <h3 class="ab-h3">Sản phẩm</h3>
+                <p class="ab-body">Giữ nền tảng kinh nghiệm, đồng thời cải tiến mẫu mã và chất lượng theo yêu cầu mới của thị trường.</p>
+            </article>
+            <article>
+                <h3 class="ab-h3">Quy trình</h3>
+                <p class="ab-body">Hoàn thiện cách tổ chức sản xuất và quản lý để nâng cao hiệu quả, tốc độ cung ứng và khả năng thích ứng.</p>
+            </article>
+            <article>
+                <h3 class="ab-h3">Dịch vụ</h3>
+                <p class="ab-body">Từ tiếp nhận nhu cầu đến hoàn thiện đơn hàng, mỗi bước là cơ hội tạo thêm giá trị cho khách hàng.</p>
+            </article>
         </div>
     </section>
 
     <!-- Toàn bộ thành tích -->
     <section class="ab-sec ab-gallery" id="ach-gallery">
-        <p class="ab-eyebrow">THÀNH TÍCH ĐẠT ĐƯỢC</p>
+        <p class="ab-eyebrow">Thành tích đạt được</p>
         <div class="ab-gallery-grid">
             {% for i in range(1, 11) %}<figure>{{ pic('Thanhtich/' ~ i ~ '.jpg', 'Thành tích ' ~ i) }}</figure>{% endfor %}
         </div>
@@ -256,8 +214,8 @@
             <figure class="ab-expo-d">{{ pic('Thanhtich/15.jpg', 'Hội chợ Sourcing At Magic, Las Vegas') }}</figure>
         </div>
         <div class="ab-expo-text">
-            <p class="ab-eyebrow">HỘI CHỢ &amp; TRIỂN LÃM QUỐC TẾ</p>
-            <h2 class="ab-h2">KẾT NỐI THỊ TRƯỜNG<br>TOÀN CẦU</h2>
+            <p class="ab-eyebrow">Hội chợ &amp; triển lãm quốc tế</p>
+            <h2 class="ab-h2">Kết nối thị trường<br>toàn cầu</h2>
             <p class="ab-body">TUẤN tự hào tham gia nhiều Hội chợ, Triển lãm Quốc tế lớn nhỏ trong và ngoài nước: cơ hội để gặp gỡ, học hỏi kinh nghiệm từ các đối tác quốc tế, kết nối, mở rộng mạng lưới và khám phá xu hướng mới của ngành.</p>
             <ul class="ab-expo-list">
                 <li>APLF ASEAN <span>Bangkok</span></li>
@@ -266,10 +224,6 @@
                 <li>Triển lãm Da và Giày Quốc tế lần thứ 23 <span>Việt Nam</span></li>
                 <li>Sourcing At Magic 2023 <span>Las Vegas, Mỹ</span></li>
             </ul>
-        </div>
-        <div class="ab-expo-side">
-            <svg viewBox="0 0 48 48" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.2"><circle cx="24" cy="24" r="19"/><ellipse cx="24" cy="24" rx="8" ry="19"/><path d="M5 24h38M8 14h32M8 34h32"/></g></svg>
-            <p>CÙNG NHAU<br>TẠO NÊN NHỮNG<br>CƠ HỘI MỚI</p>
         </div>
     </section>
 

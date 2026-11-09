@@ -4,7 +4,7 @@
 {% block admin_content %}
 {% set f = request.form if request.method == 'POST' else {} %}
 <div class="welcome-header"><h2>{{ 'Sửa bài viết' if post.id else 'Viết bài mới' }}</h2></div>
-<form method="post" class="form-card wide" id="blogForm"
+<form method="post" class="form-card wide be-form" id="blogForm"
       data-upload-url="{{ url_for('admin.blog_upload_image') }}" data-static="{{ url_for('static', filename='') }}">
     {{ csrf() }}
 
@@ -36,15 +36,19 @@
 
     <div class="be-block">
         <h3 class="be-block-title"><span class="be-num">3</span> Đăng bài</h3>
-        <label>Đường dẫn (slug) <small class="muted">để trống sẽ tự tạo từ tiêu đề</small><input name="slug" value="{{ f.get('slug', post.slug or '') }}" maxlength="200"></label>
-        {% set st = f.get('status', post.status) %}
-        <label>Trạng thái
-            <select name="status"><option value="DRAFT" {{ 'selected' if st != 'PUBLISHED' }}>Bản nháp</option><option value="PUBLISHED" {{ 'selected' if st == 'PUBLISHED' }}>Xuất bản</option></select></label>
+        <div class="be-grid2">
+            <label>Đường dẫn (slug) <small class="muted">để trống sẽ tự tạo từ tiêu đề</small><input name="slug" value="{{ f.get('slug', post.slug or '') }}" maxlength="200"></label>
+            {% set st = f.get('status', post.status) %}
+            <label>Trạng thái <small class="muted">bản nháp sẽ không hiện ra ngoài</small>
+                <select name="status"><option value="DRAFT" {{ 'selected' if st != 'PUBLISHED' }}>Bản nháp</option><option value="PUBLISHED" {{ 'selected' if st == 'PUBLISHED' }}>Xuất bản</option></select></label>
+        </div>
     </div>
 
     <p class="be-error" id="beError" role="alert" hidden></p>
-    <button class="btn-dark" data-loading-text="Đang lưu...">Lưu bài viết</button>
-    <a class="btn-light" href="{{ url_for('admin.blog') }}">Quay lại</a>
+    <div class="be-actions">
+        <button class="btn-dark" data-loading-text="Đang lưu...">Lưu bài viết</button>
+        <a class="btn-light" href="{{ url_for('admin.blog') }}">Quay lại</a>
+    </div>
 </form>
 <script type="application/json" id="initSections">{{ sections|tojson }}</script>
 <script>

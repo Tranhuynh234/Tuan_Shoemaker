@@ -29,76 +29,6 @@
 </div>
 {% endmacro %}
 
-{% block extra_head %}
-<style>
-    /* Slideshow*/
-    .slideshow {
-        position: relative;
-    }
-
-    .slideshow img.slide {
-        position: absolute;
-        inset: 0;
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        opacity: 0;
-        z-index: 2;
-        transition: opacity 0.9s ease;
-    }
-
-    .slideshow img.slide.active {
-        opacity: 1;
-        z-index: 3;
-    }
-
-    .slideshow-container {
-        width: 100%;
-    }
-
-    .slideshow-container .image-box {
-        margin-bottom: 14px;
-    }
-
-    .slideshow-dots {
-        display: flex;
-        justify-content: center;
-        gap: 10px;
-    }
-
-    .slideshow-dots .dot {
-        width: 9px;
-        height: 9px;
-        padding: 0;
-        border: 0;
-        border-radius: 50%;
-        background: #c4c2bd;
-        cursor: pointer;
-        transition: background 0.3s, transform 0.3s;
-    }
-
-    .slideshow-dots .dot:hover {
-        background: #888;
-    }
-
-    .slideshow-dots .dot.active {
-        background: var(--text-dark);
-        transform: scale(1.3);
-    }
-
-    .slideshow-dots .dot:focus-visible {
-        outline: 2px solid var(--accent-red);
-        outline-offset: 3px;
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-        .slideshow img.slide {
-            transition: none;
-        }
-    }
-</style>
-{% endblock %}
-
 {% block hero %}
 <!-- PHẦN ĐẦU TRANG  -->
 <section class="hero-section">
@@ -107,6 +37,13 @@
         <source src="{{ url_for('static', filename='images/videos/Banner.mp4') }}" type="video/mp4">
     </video>
 
+    {% set hero_images = ['images/logo/banner1.jpg'] %}
+    <div class="hero-slides" data-hero-slides aria-hidden="true">
+        {% for path in hero_images %}
+        <img class="hero-slide" src="{{ url_for('static', filename=path) }}" alt="">
+        {% endfor %}
+    </div>
+
     {% set header_class = 'header-hero' %}
     {% include 'partials/header.html' %}
 
@@ -114,17 +51,77 @@
         <a href="{{ url_for('main.products') }}" class="btn-primary">KHÁM PHÁ NGAY</a>
     </div>
 </section>
+<script>
+(function () {
+    var box = document.querySelector('[data-hero-slides]'), video = document.getElementById('heroVideo');
+    if (!box || !video) return;
+    var HOLD = 3000;                                   // mỗi hình hiện 3 giây
+    var imgs = Array.prototype.slice.call(box.querySelectorAll('.hero-slide'));
+    try { video.pause(); video.currentTime = 0; } catch (e) {}   // video chờ, chưa chạy
+
+    function loaded(img) {
+        return new Promise(function (resolve) {
+            if (img.complete) return resolve(img.naturalWidth > 0);
+            img.addEventListener('load', function () { resolve(true); });
+            img.addEventListener('error', function () { resolve(false); });
+            setTimeout(function () { resolve(img.complete && img.naturalWidth > 0); }, 4000);
+        });
+    }
+    function playVideo() {
+        box.classList.add('is-done');                  // hình mờ dần, lộ video bên dưới
+        var p = video.play();
+        if (p && p.catch) p.catch(function () { video.muted = true; video.play().catch(function () {}); });
+    }
+    Promise.all(imgs.map(loaded)).then(function (ok) {
+        var good = imgs.filter(function (_, i) { return ok[i]; });
+        imgs.forEach(function (im) { if (good.indexOf(im) < 0) im.remove(); });   // hình lỗi: bỏ qua
+        if (!good.length) return playVideo();
+        var i = 0;
+        good[0].classList.add('is-active');
+        (function next() {
+            setTimeout(function () {
+                good[i].classList.remove('is-active');
+                i += 1;
+                if (i < good.length) { good[i].classList.add('is-active'); next(); } else { playVideo(); }
+            }, HOLD);
+        })();
+    });
+})();
+</script>
 {% endblock %}
 
 {% block content %}
 <div class="container">
+
+    <!-- BANNER HÌNH ẢNH THƯƠNG HIỆU -->
+    {% set bm_left = ['L1.jpg', 'L2.jpg', 'L3.jpg', 'L4.jpg'] %}
+    {% set bm_right = ['R1.jpg', 'R2.jpg', 'R3.jpg', 'R4.jpg'] %}
+    <section class="bm-banner" aria-label="Hình ảnh thương hiệu">
+        <div class="bm-slider" data-bm-slider>
+            {% for n in bm_left %}
+            <img src="{{ url_for('static', filename='images/brand/' ~ n) }}"
+                alt="Hình ảnh thương hiệu {{ loop.index }}"
+                class="bm-slide{{ ' is-active' if loop.first }}"
+                {% if not loop.first %}loading="lazy"{% endif %}>
+            {% endfor %}
+        </div>
+        <div class="bm-slider" data-bm-slider>
+            {% for n in bm_right %}
+            <img src="{{ url_for('static', filename='images/brand/' ~ n) }}"
+                alt="Hình ảnh thương hiệu {{ loop.index + 4 }}"
+                class="bm-slide{{ ' is-active' if loop.first }}"
+                {% if not loop.first %}loading="lazy"{% endif %}>
+            {% endfor %}
+        </div>
+    </section>
+
     <section class="brand-section">
         <h2 class="section-title">THƯƠNG HIỆU</h2>
 
         {% set brand_images = {
         'tuan': ['images/brand/brandT1.jpg', 'images/brand/brandT2.jpg', 'images/brand/brandT3.jpg'],
         'kodoss': ['images/brand/brandK1.jpg', 'images/brand/brandK2.jpg', 'images/brand/brandK3.jpg'],
-        'nauts': ["images/brand/brandN1.jpg", "images/brand/brandN2.jpg", "images/brand/brandN3.jpg"],
+        'nauts': ['images/brand/brandN1.jpg', 'images/brand/brandN2.jpg', 'images/brand/brandN3.jpg'],
         'magari': ['images/brand/brandM1.jpg', 'images/brand/brandM2.jpg', 'images/brand/brandM3.jpg']
         } %}
 
@@ -218,8 +215,8 @@
                             src="https://www.google.com/maps?q={{ sv.map|urlencode }}&hl=vi&z=16&output=embed"
                             loading="lazy" allowfullscreen referrerpolicy="no-referrer-when-downgrade"></iframe>
                         {% elif is_video %}
-                        <video src="{{ url_for('static', filename='images/' ~ media) }}" autoplay muted loop playsinline
-                            preload="metadata" data-service-video></video>
+                        <video src="{{ url_for('static', filename='images/' ~ media) }}" autoplay muted loop
+                            playsinline preload="metadata" data-service-video></video>
                         {% else %}
                         <img src="{{ url_for('static', filename='images/' ~ media) }}" alt="" loading="lazy"
                             onerror="this.style.visibility='hidden'">
@@ -231,8 +228,8 @@
                     {% endif %}
                 </div>
                 <h3 class="service-name">{{ sv.title }}</h3>
-                {% if sv.desc and sv.map %}<a class="service-desc service-desc-link" href="{{ sv.url }}" target="_blank"
-                    rel="noopener">{{ sv.desc }}</a>
+                {% if sv.desc and sv.map %}<a class="service-desc service-desc-link" href="{{ sv.url }}"
+                    target="_blank" rel="noopener">{{ sv.desc }}</a>
                 {% elif sv.desc %}<p class="service-desc">{{ sv.desc }}</p>{% endif %}
                 {% if sv.link %}<a class="service-link" href="{{ sv.url }}" {% if sv.map %} target="_blank"
                     rel="noopener" {% endif %}>{{ sv.link }}</a>{% endif %}
@@ -240,69 +237,36 @@
             {% endfor %}
         </div>
     </section>
+    </div>
+<!-- 3 NÚT CHAT NỔI -->
+<div class="chat-widget" aria-label="Liên hệ nhanh">
+    <a class="chat-btn chat-btn-zalo" href="https://zalo.me/0919772295" target="_blank" rel="noopener" aria-label="Nhắn tin Zalo">
+        <img class="zalo-icon" src="https://cdn.jsdelivr.net/gh/glincker/thesvg@main/public/icons/zalo/default.svg"
+            alt="" width="30" height="30"
+            onerror="this.style.display='none';this.nextElementSibling.style.display='block';">
+        <svg style="display:none" viewBox="0 0 48 48" aria-hidden="true">
+            <path fill="currentColor" d="M24,4C12.954,4,4,11.291,4,20.25c0,5.08,2.716,9.638,6.992,12.637V42l5.772-3.179c2.259,0.627,4.664,0.969,7.236,0.969c11.046,0,20-7.291,20-16.25S35.046,4,24,4z" />
+            <path stroke="var(--cb-bg)" stroke-width="3" stroke-linecap="round" d="M17 18.5v6M23 18.5v6M29 18.5v6" />
+        </svg>
+        <span class="chat-label">Chat Zalo</span>
+    </a>
+
+    <a class="chat-btn chat-btn-mess" href="https://m.me/1418406001349519" target="_blank" rel="noopener"
+        aria-label="Nhắn tin Messenger">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+            stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 3C7 3 3 6.6 3 11.1c0 2.5 1.2 4.7 3.2 6.2V21l3-1.7c.9.2 1.8.4 2.8.4 5 0 9-3.6 9-8.1S17 3 12 3Z" />
+            <path d="m7.6 13.4 3.1-3.3 2.4 2.1 3.3-2.1-3.2 3.5-2.4-2.1-3.2 1.9Z" />
+        </svg>
+        <span class="chat-label">Messenger</span>
+    </a>
+
+    <a class="chat-btn chat-btn-mess" href="tel:0919772295" aria-label="Gọi 0919 772 295">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+            stroke-linejoin="round" aria-hidden="true">
+            <path d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 0 1-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 0 0-1.091-.852H4.5A2.25 2.25 0 0 0 2.25 4.5v2.25Z" />
+        </svg>
+        <span class="chat-label">0919 772 295</span>
+    </a>
 </div>
-{% endblock %}
-
-{% block scripts %}
-<script>
-    // Video banner + video dịch vụ
-    (function () {
-        function tryPlay(v) {
-            var p = v.play();
-            if (p && p.catch) p.catch(function () { /* bị chặn: giữ poster/khung hình đầu */ });
-        }
-        document.querySelectorAll('#heroVideo, [data-service-video]').forEach(function (v) {
-            v.muted = true;
-            tryPlay(v);
-            v.addEventListener('loadeddata', function () { if (v.paused && !v.dataset.userPaused) tryPlay(v); });
-        });
-        document.querySelectorAll('[data-service-toggle]').forEach(function (btn) {
-            var v = btn.parentElement.querySelector('video');
-            if (!v) return;
-            btn.addEventListener('click', function () {
-                var pausing = !v.paused;
-                if (pausing) { v.pause(); v.dataset.userPaused = '1'; } else { delete v.dataset.userPaused; tryPlay(v); }
-                btn.setAttribute('aria-pressed', pausing ? 'true' : 'false');
-                btn.setAttribute('aria-label', pausing ? 'Phát video' : 'Tạm dừng video');
-                btn.firstElementChild.textContent = pausing ? '▶' : 'II';
-            });
-        });
-    })();
-</script>
-<script>
-    (function () {
-        var INTERVAL = 2000;
-        var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-        document.querySelectorAll('[data-slideshow]').forEach(function (box, boxIndex) {
-            var slides = box.querySelectorAll('.slide');
-            var dots = box.querySelectorAll('.dot');
-            if (slides.length < 2) return;
-            var current = 0, timer = null;
-
-            function show(i) {
-                current = (i + slides.length) % slides.length;
-                slides.forEach(function (s, k) { s.classList.toggle('active', k === current); });
-                dots.forEach(function (d, k) { d.classList.toggle('active', k === current); });
-            }
-            function start() {
-                if (reduceMotion || timer) return;
-                timer = setInterval(function () { show(current + 1); }, INTERVAL);
-            }
-            function stop() { clearInterval(timer); timer = null; }
-
-            dots.forEach(function (d) {
-                d.addEventListener('click', function () {
-                    show(parseInt(d.dataset.index, 10));
-                    stop(); start();
-                });
-            });
-            box.addEventListener('mouseenter', stop);
-            box.addEventListener('mouseleave', start);
-            document.addEventListener('visibilitychange', function () { document.hidden ? stop() : start(); });
-
-            setTimeout(start, boxIndex * 500);
-        });
-    })();
-</script>
 {% endblock %}

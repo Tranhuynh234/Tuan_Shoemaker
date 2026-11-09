@@ -1,0 +1,143 @@
+{% from 'partials/macros.html' import csrf %}
+
+{% macro shoe_oxford() %}
+<svg class="auth-shoe auth-shoe--oxford" viewBox="0 0 200 104" aria-hidden="true" focusable="false">
+    <defs>
+        <linearGradient id="authOxL" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#40576f"/><stop offset=".5" stop-color="#243443"/><stop offset="1" stop-color="#141c26"/>
+        </linearGradient>
+        <linearGradient id="authOxG" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".32"/><stop offset="1" stop-color="#fff" stop-opacity="0"/>
+        </linearGradient>
+    </defs>
+    <path d="M12 84H188Q199 84 198 90Q197 96 187 96H52V100Q52 102 49 102H18Q12 102 12 97Z" fill="#0b1118"/>
+    <path d="M14 87H190" stroke="#c5a880" stroke-width="1.5" stroke-linecap="round"/>
+    <path d="M14 84C10 68 12 52 21 38C33 34 46 38 58 43L108 56C128 61 152 61 172 67C188 71 197 77 197 84Z" fill="url(#authOxL)"/>
+    <path d="M21 38C33 34 46 38 58 43" fill="none" stroke="#0b1118" stroke-width="3" stroke-linecap="round"/>
+    <path d="M156 62C165 68 167 77 165 84" fill="none" stroke="#0b1118" stroke-width="1.5" stroke-linecap="round"/>
+    <path d="M159 62.5C167 68 169 76 167 83" fill="none" stroke="#c5a880" stroke-width=".9" stroke-dasharray="2 2.4" stroke-linecap="round"/>
+    <path d="M13 64C20 64 25 68 26 76L27 84" fill="none" stroke="#0b1118" stroke-width="1.5" stroke-linecap="round"/>
+    <g stroke="#e9dcc2" stroke-width="2.3" stroke-linecap="round"><path d="M68 45l-4 8"/><path d="M80 49l-4 8"/><path d="M92 53l-4 8"/><path d="M104 57l-4 8"/></g>
+    <g fill="#c5a880"><circle cx="64" cy="53" r="1.6"/><circle cx="76" cy="57" r="1.6"/><circle cx="88" cy="61" r="1.6"/><circle cx="100" cy="65" r="1.6"/></g>
+    <path d="M118 66Q140 70 160 74" fill="none" stroke="url(#authOxG)" stroke-width="5" stroke-linecap="round"/>
+</svg>
+{% endmacro %}
+
+{# ---- Icon giày da 2: Loafer (đỏ đô) ---- #}
+{% macro shoe_loafer() %}
+<svg class="auth-shoe auth-shoe--loafer" viewBox="0 0 200 104" aria-hidden="true" focusable="false">
+    <defs>
+        <linearGradient id="authLfL" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#8e2f3d"/><stop offset=".5" stop-color="#5b1a26"/><stop offset="1" stop-color="#2f0d14"/>
+        </linearGradient>
+        <linearGradient id="authLfS" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#a23a49"/><stop offset="1" stop-color="#6a2030"/>
+        </linearGradient>
+        <linearGradient id="authLfG" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".3"/><stop offset="1" stop-color="#fff" stop-opacity="0"/>
+        </linearGradient>
+    </defs>
+    <path d="M12 84H188Q199 84 198 90Q197 96 187 96H52V100Q52 102 49 102H18Q12 102 12 97Z" fill="#14070b"/>
+    <path d="M14 87H190" stroke="#c5a880" stroke-width="1.5" stroke-linecap="round"/>
+    <path d="M14 84C11 74 12 62 20 54C36 51 54 60 72 64C86 62 98 57 114 59C142 62 170 66 185 74C194 79 197 82 197 84Z" fill="url(#authLfL)"/>
+    <path d="M20 54C36 51 54 60 72 64" fill="none" stroke="#14070b" stroke-width="2.6" stroke-linecap="round"/>
+    <path d="M84 63C94 58 106 57 118 60L110 80C102 77 94 76 84 77Z" fill="url(#authLfS)" stroke="#14070b" stroke-width="1"/>
+    <rect x="96" y="65" width="14" height="4.6" rx="2.3" transform="rotate(8 103 67)" fill="#14070b" stroke="#c5a880" stroke-width=".9"/>
+    <path d="M124 62C146 66 166 70 178 76" fill="none" stroke="#c5a880" stroke-width=".9" stroke-dasharray="2 2.4" stroke-linecap="round"/>
+    <path d="M13 70C19 70 24 72 25 78L26 84" fill="none" stroke="#14070b" stroke-width="1.4" stroke-linecap="round"/>
+    <path d="M130 68Q150 71 168 76" fill="none" stroke="url(#authLfG)" stroke-width="5" stroke-linecap="round"/>
+</svg>
+{% endmacro %}
+
+{% macro auth_card(mode='login', form=none) %}
+{% set f = form or {} %}
+<div class="auth-fit">
+    <div class="auth-stage" id="authStage" data-mode="{{ mode }}"
+         data-login-url="{{ url_for('auth.login') }}" data-register-url="/register"
+         data-title-login="Đăng nhập - TUẤN" data-title-register="Đăng ký - TUẤN">
+
+        {# ===== Form đăng nhập ===== #}
+        <section class="auth-panel auth-panel--login" aria-labelledby="authLoginTitle"{% if mode != 'login' %} inert aria-hidden="true"{% endif %}>
+            <form id="loginForm" class="auth-form" method="POST">
+                {{ csrf() }}
+                <h2 class="auth-title" id="authLoginTitle">Đăng nhập</h2>
+                <p class="auth-sub">Dùng số điện thoại của bạn</p>
+
+                <div class="auth-field">
+                    <label class="auth-sr" for="phone_number">Số điện thoại</label>
+                    <input type="tel" name="phone" id="phone_number" class="auth-input"
+                           placeholder="Số điện thoại" autocomplete="tel" inputmode="tel" required>
+                </div>
+
+                <div class="auth-field">
+                    <label class="auth-sr" for="password">Mật khẩu</label>
+                    <input type="password" name="password" id="password" class="auth-input"
+                           placeholder="Mật khẩu" autocomplete="current-password" required>
+                </div>
+
+                <div class="auth-row">
+                    <label class="auth-check">
+                        <input type="checkbox" data-toggle-password="#password">
+                        Hiện mật khẩu
+                    </label>
+                    <a class="auth-link" href="/forgot-password">Quên mật khẩu?</a>
+                </div>
+
+                <button type="submit" class="auth-btn" id="loginBtn" data-loading-text="Đang đăng nhập...">Đăng nhập</button>
+            </form>
+        </section>
+
+        {# ===== Form đăng ký ===== #}
+        <section class="auth-panel auth-panel--register" aria-labelledby="authRegisterTitle"{% if mode != 'register' %} inert aria-hidden="true"{% endif %}>
+            <form id="registerForm" class="auth-form" method="POST">
+                {{ csrf() }}
+                <h2 class="auth-title" id="authRegisterTitle">Tạo tài khoản</h2>
+                <p class="auth-sub">Đăng ký bằng số điện thoại</p>
+
+                <div class="auth-field">
+                    <label class="auth-sr" for="reg_phone">Số điện thoại</label>
+                    <input type="tel" name="phone" id="reg_phone" class="auth-input"
+                           value="{{ f.get('phone', '') }}" placeholder="Số điện thoại"
+                           maxlength="20" autocomplete="tel" inputmode="tel" required>
+                </div>
+
+                <div class="auth-field">
+                    <label class="auth-sr" for="reg_password">Mật khẩu (tối thiểu 8 ký tự)</label>
+                    <input type="password" name="password" id="reg_password" class="auth-input"
+                           placeholder="Mật khẩu (tối thiểu 8 ký tự)" minlength="8"
+                           autocomplete="new-password" required>
+                </div>
+
+                <div class="auth-field is-last">
+                    <label class="auth-sr" for="reg_confirm_password">Xác nhận mật khẩu</label>
+                    <input type="password" name="confirm_password" id="reg_confirm_password" class="auth-input"
+                           placeholder="Nhập lại mật khẩu" minlength="8"
+                           autocomplete="new-password" required>
+                </div>
+
+                <button type="submit" class="auth-btn" data-loading-text="Đang tạo tài khoản...">Tạo tài khoản</button>
+            </form>
+        </section>
+
+        {# ===== Bảng trượt ở giữa + 2 icon giày da ===== #}
+        <aside class="auth-switch">
+            <span class="auth-circle auth-circle--t" aria-hidden="true">{{ shoe_oxford() }}</span>
+            <span class="auth-circle auth-circle--b" aria-hidden="true">{{ shoe_loafer() }}</span>
+
+            {# hiện khi đang ở trang đăng nhập #}
+            <div class="auth-copy auth-copy--to-register" data-show-in="login"{% if mode != 'login' %} inert aria-hidden="true"{% endif %}>
+                <h2 class="auth-copy-title">Xin chào!</h2>
+                <p class="auth-copy-text">Chưa có tài khoản? Đăng ký để mua sắm nhanh hơn và theo dõi đơn hàng của bạn.</p>
+                <a class="auth-btn auth-btn--ghost" href="/register" data-auth-go="register">Đăng ký</a>
+            </div>
+
+            {# hiện khi đang ở trang đăng ký #}
+            <div class="auth-copy auth-copy--to-login" data-show-in="register"{% if mode != 'register' %} inert aria-hidden="true"{% endif %}>
+                <h2 class="auth-copy-title">Chào mừng trở lại!</h2>
+                <p class="auth-copy-text">Đã có tài khoản? Đăng nhập để tiếp tục mua sắm và xem lại đơn hàng.</p>
+                <a class="auth-btn auth-btn--ghost" href="{{ url_for('auth.login') }}" data-auth-go="login">Đăng nhập</a>
+            </div>
+        </aside>
+    </div>
+</div>
+{% endmacro %}

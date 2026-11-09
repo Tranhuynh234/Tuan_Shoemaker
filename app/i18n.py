@@ -6,8 +6,11 @@ theo từ điển (TEXT cho tiếng Anh, app/i18n_zh.py cho tiếng Trung) (kh�
 - Nội dung do admin nhập (tên sản phẩm, bài blog...) không dịch.
 - Trang quản trị luôn giữ tiếng Việt.
 """
+import html as _html
 import re
 
+from . import auto_translate
+from .i18n_extra import ROWS as _EXTRA_ROWS, TAIL_PATTERNS as _TAIL_PATTERNS, ZH_ONLY as _ZH_ONLY
 from .i18n_zh import ZH_BY_EN, ZH_EXTRA, ZH_PATTERNS
 
 LANGS = ("vi", "en", "zh")
@@ -217,11 +220,27 @@ TEXT_ZH = {vi: ZH_BY_EN[en] for vi, en in TEXT.items() if en in ZH_BY_EN}
 TEXT_ZH.update(ZH_EXTRA)
 _COMPILED_ZH = [(re.compile(p), r) for p, r in ZH_PATTERNS]
 
+# Bản dịch bổ sung (app/i18n_extra.py): bản đã có ở trên luôn được ưu tiên.
+for _vi, _en, _zh in _EXTRA_ROWS:
+    TEXT.setdefault(_vi, _en)
+    TEXT_ZH.setdefault(_vi, _zh)
+for _k, _v in _ZH_ONLY.items():
+    TEXT_ZH.setdefault(_k, _v)
+_TAIL = [(re.compile(p), en, zh) for p, en, zh in _TAIL_PATTERNS]
+
+# Tra từ điển không phân biệt hoa/thường (vd. tiêu đề "GIÀY TÂY NAM" hay "tất cả sản phẩm nam").
+_LOWER = {"en": {k.lower(): v for k, v in TEXT.items()}, "zh": {k.lower(): v for k, v in TEXT_ZH.items()}}
+
 _DICTS = {"en": (TEXT, _COMPILED), "zh": (TEXT_ZH, _COMPILED_ZH)}
 
 TEXT_NODE = re.compile(r">([^<>]+)<")
-ATTR = re.compile(r'\b(placeholder|aria-label|alt|title|data-confirm|data-loading-text)="([^"]*)"')
+ATTR = re.compile(r'\b(placeholder|aria-label|alt|title|data-confirm|data-loading-text|data-default-text|data-error-text|data-label-play|data-label-pause)="([^"]*)"')
 HAS_VI = re.compile(r"[À-ỹ]")
+
+
+def _lookup(piece: str, texts: dict, lang: str) -> str:
+    """Dịch một mảnh chữ (vd. tên danh mục) nếu có trong từ điển, không thì giữ nguyên."""
+    return texts.get(piece) or _LOWER.get(lang, _LOWER["en"]).get(piece.lower()) or piece
 
 
 def translate_text(s: str, lang: str = "en") -> str:
@@ -231,11 +250,25 @@ def translate_text(s: str, lang: str = "en") -> str:
         return s
     if key in texts:
         return texts[key]
+    low = _LOWER.get(lang, _LOWER["en"]).get(key.lower())
+    if low is not None:  # khác hoa/thường so với khóa trong từ điển
+        return low.upper() if lang != "zh" and key.isupper() else low
+
+    for rx, en, zh in _TAIL:  # câu có chỗ trống động (tên danh mục, số liệu...)
+        m = rx.match(key)
+        if m:
+            parts = [_lookup(g, texts, lang) for g in m.groups()]
+            return (zh if lang == "zh" else en).format(*parts)
 
     # tiêu đề trang dạng "<tên trang> - TUẤN ..."
     m = re.match(r"^(.*?)(TUẤN.*| \| .*)$", key)
-    if m and m.group(1) in texts:
-        return texts[m.group(1)] + m.group(2)
+    if m:
+        head = m.group(1)
+        base = head.rstrip(" -–|")
+        if head in texts:
+            return texts[head] + m.group(2)
+        if base and base != head and _lookup(base, texts, lang) != base:
+            return _lookup(base, texts, lang) + head[len(base):] + m.group(2)
 
     out = key
     for rx, rep in patterns:
@@ -243,10 +276,44 @@ def translate_text(s: str, lang: str = "en") -> str:
     return out if out != key else s
 
 
+_BRAND = re.compile(r"Tuấn|TUẤN|Giày|Huế|×")
+_CODE = re.compile(r"function\s*\(|=>|document\.|window\.|\bvar\b|\bconst\b")
+
+
+def _needs_auto(key: str, lang: str) -> bool:
+    """Câu còn chữ tiếng Việt sau khi dịch theo từ điển (không tính tên thương hiệu) -> cần dịch tự động."""
+    if len(key) > 4500 or _CODE.search(key):
+        return False
+    static = translate_text(key, lang)
+    return bool(HAS_VI.search(_BRAND.sub("", static)))
+
+
 def translate_html(html: str, lang: str = "en") -> str:
+    auto = {}
+    if auto_translate.enabled() and lang in ("en", "zh"):
+        pending = set()
+        for m in TEXT_NODE.finditer(html):
+            key = " ".join(_html.unescape(m.group(1)).split())
+            if HAS_VI.search(key) and _needs_auto(key, lang):
+                pending.add(key)
+        for m in ATTR.finditer(html):
+            key = " ".join(_html.unescape(m.group(2)).split())
+            if HAS_VI.search(key) and _needs_auto(key, lang):
+                pending.add(key)
+        if pending:
+            auto = auto_translate.translate_batch(sorted(pending), lang)
+
+    def tr(raw: str) -> str:
+        new = translate_text(raw, lang)
+        if auto and HAS_VI.search(_BRAND.sub("", new)):
+            hit = auto.get(" ".join(_html.unescape(raw).split()))
+            if hit:
+                return _html.escape(hit, quote=False)
+        return new
+
     def node(m):
         raw = m.group(1)
-        new = translate_text(raw, lang)
+        new = tr(raw)
         if new is raw or new == raw:
             return m.group(0)
         lead = raw[:len(raw) - len(raw.lstrip())]
@@ -254,7 +321,30 @@ def translate_html(html: str, lang: str = "en") -> str:
         return ">" + lead + new + trail + "<"
 
     def attr(m):
-        new = translate_text(m.group(2), lang)
-        return m.group(0) if new == m.group(2) else f'{m.group(1)}="{new}"'
+        new = tr(m.group(2))
+        return m.group(0) if new == m.group(2) else f'{m.group(1)}="{_html.escape(new, quote=True) if auto else new}"'
 
     return ATTR.sub(attr, TEXT_NODE.sub(node, html))
+
+
+_JSON_TEXT_KEYS = ("error", "message", "errors")
+
+
+def translate_json(payload, lang: str = "en"):
+    """Dịch các thông báo (khóa error/message/errors) trong phản hồi JSON của trang khách hàng."""
+    if isinstance(payload, dict):
+        return {k: (translate_json_value(v, lang) if k in _JSON_TEXT_KEYS else v) for k, v in payload.items()}
+    return payload
+
+
+def translate_json_value(v, lang: str):
+    if isinstance(v, str):
+        out = translate_text(v, lang)
+        if auto_translate.enabled() and HAS_VI.search(_BRAND.sub("", out)):
+            out = auto_translate.translate_batch([" ".join(v.split())], lang).get(" ".join(v.split()), out)
+        return out
+    if isinstance(v, list):
+        return [translate_json_value(x, lang) for x in v]
+    if isinstance(v, dict):
+        return {k: translate_json_value(x, lang) for k, x in v.items()}
+    return v

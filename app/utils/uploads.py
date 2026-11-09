@@ -12,6 +12,9 @@ SIGNATURES = {
 }
 
 
+MAX_IMAGE_BYTES = 5 * 1024 * 1024
+
+
 class UploadError(Exception):
     pass
 
@@ -22,6 +25,10 @@ def _save_image(file_storage, folder: str, url_prefix: str) -> str:
     ext = file_storage.filename.rsplit(".", 1)[-1].lower() if "." in file_storage.filename else ""
     if ext not in current_app.config["ALLOWED_IMAGE_EXTENSIONS"]:
         raise UploadError("Chỉ chấp nhận ảnh JPG, PNG hoặc WEBP.")
+    file_storage.stream.seek(0, 2)
+    if file_storage.stream.tell() > MAX_IMAGE_BYTES:
+        raise UploadError("Ảnh lớn hơn 5MB.")
+    file_storage.stream.seek(0)
     head = file_storage.stream.read(16)
     file_storage.stream.seek(0)
     if not any(head.startswith(sig) for sig in SIGNATURES[ext]) or (ext == "webp" and head[8:12] != b"WEBP"):

@@ -15,7 +15,7 @@
     </label>
     <label>Ghi chú đơn hàng<textarea name="order_note" maxlength="500" rows="3"></textarea></label>
     <p id="checkoutError" class="text-error" role="alert"></p>
-    <button class="btn-dark" type="submit" id="submitGuestOrder">Xác nhận đặt hàng</button>
+    <button class="btn-dark" type="submit" id="submitGuestOrder" data-loading-text="Đang xử lý..." data-default-text="Xác nhận đặt hàng" data-error-text="Không thể đặt hàng. Vui lòng thử lại.">Xác nhận đặt hàng</button>
   </form>
 </div>
 <script>
@@ -23,17 +23,17 @@ document.getElementById('guestCheckoutForm').addEventListener('submit', async fu
   e.preventDefault();
   const form = e.currentTarget, button = document.getElementById('submitGuestOrder');
   const error = document.getElementById('checkoutError');
-  button.disabled = true; button.textContent = 'Đang xử lý...'; error.textContent = '';
+  button.disabled = true; button.textContent = button.dataset.loadingText; error.textContent = '';
   try {
     const data = Object.fromEntries(new FormData(form).entries());
     const response = await fetch('{{ url_for("cart.guest_checkout") }}', {
       method: 'POST', headers: {'Content-Type':'application/json', 'X-CSRFToken': '{{ csrf_token() }}'},
       body: JSON.stringify(data)
     });
-    const result = await response.json();
-    if (!response.ok) throw new Error(result.error || 'Không thể đặt hàng. Vui lòng thử lại.');
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(result.error || (button.dataset.errorText + ' (' + response.status + ')'));
     window.location.href = result.redirect_url;
-  } catch (err) { error.textContent = err.message; button.disabled = false; button.textContent = 'Xác nhận đặt hàng'; }
+  } catch (err) { error.textContent = err.message; button.disabled = false; button.textContent = button.dataset.defaultText; }
 });
 </script>
 {% endblock %}

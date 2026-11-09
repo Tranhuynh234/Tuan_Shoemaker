@@ -1,5 +1,6 @@
 """Cấu hình ứng dụng. Mọi giá trị nhạy cảm đọc từ biến môi trường / file .env."""
 import os
+import tempfile
 from datetime import timedelta
 from pathlib import Path
 from urllib.parse import quote_plus
@@ -8,6 +9,19 @@ from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent
 load_dotenv(BASE_DIR / ".env")
+
+
+def _ssl_connect_args() -> dict:
+    """Aiven yêu cầu SSL. CA đọc từ DB_SSL_CA (đường dẫn file) hoặc DB_SSL_CA_PEM (nội dung)."""
+    ca_path = os.getenv("DB_SSL_CA")
+    ca_pem = os.getenv("DB_SSL_CA_PEM")
+    if ca_pem:
+        p = Path(tempfile.gettempdir()) / "aiven-ca.pem"
+        p.write_text(ca_pem.replace("\\n", "\n"))
+        ca_path = str(p)
+    if ca_path:
+        return {"ssl": {"ca": ca_path}}
+    return {}
 
 
 def _build_db_uri() -> str:
@@ -25,10 +39,13 @@ def _build_db_uri() -> str:
 class Config:
     SECRET_KEY = os.getenv("SECRET_KEY")
     SQLALCHEMY_DATABASE_URI = _build_db_uri()
-    SQLALCHEMY_ENGINE_OPTIONS = {"pool_pre_ping": True, "pool_recycle": 280}
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        "pool_pre_ping": True,
+        "pool_recycle": 280,
+        "connect_args": _ssl_connect_args(),
+    }
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
-    # Session / cookie
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = "Lax"
     SESSION_COOKIE_SECURE = False
@@ -41,6 +58,7 @@ class Config:
 
     # Upload ảnh
     MAX_CONTENT_LENGTH = 5 * 1024 * 1024  # 5 MB
+    PRODUCT_FORM_MAX_BYTES = 64 * 1024 * 1024  # form sản phẩm: tối đa 12 ảnh x 5MB gửi cùng lúc
     UPLOAD_FOLDER = str(BASE_DIR / "app" / "static" / "uploads" / "products")
     BLOG_UPLOAD_FOLDER = str(BASE_DIR / "app" / "static" / "uploads" / "blog")
     # Tên khóa phải là ALLOWED_IMAGE_EXTENSIONS: app/utils/uploads.py đọc đúng khóa này
@@ -60,7 +78,8 @@ class Config:
     LOGIN_MAX_FAILS_PER_IP = int(os.getenv("LOGIN_MAX_FAILS_PER_IP", "20"))       
     LOGIN_WINDOW_SECONDS = int(os.getenv("LOGIN_WINDOW_SECONDS", "900"))   
     REGISTER_MAX_PER_IP_HOUR = int(os.getenv("REGISTER_MAX_PER_IP_HOUR", "10"))
-    GUEST_CHECKOUT_MAX_PER_IP_HOUR = int(os.getenv("GUEST_CHECKOUT_MAX_PER_IP_HOUR", "20"))
+    GUEST_ORDER_MAX_PER_IP_HOUR = int(os.getenv("GUEST_ORDER_MAX_PER_IP_HOUR", os.getenv("GUEST_CHECKOUT_MAX_PER_IP_HOUR", "20")))
+    GUEST_ORDER_MAX_PER_PHONE_HOUR = int(os.getenv("GUEST_ORDER_MAX_PER_PHONE_HOUR", "5"))
 
     # OTP khôi phục mật khẩu qua SMS
     OTP_TTL_SECONDS = 300

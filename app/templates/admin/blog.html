@@ -3,13 +3,14 @@
 {% block title %}Blog{% endblock %}
 {% block admin_content %}
 <div class="welcome-header row-between"><h2>Bài viết blog</h2><a class="btn-dark" href="{{ url_for('admin.blog_new') }}">+ Viết bài</a></div>
-<div class="recent-activity"><div class="table-scroll"><table>
+<div class="recent-activity be-list"><div class="table-scroll"><table>
     <thead><tr><th>Tiêu đề</th><th>Trạng thái</th><th>Xuất bản</th><th></th></tr></thead>
     <tbody>
     {% for p in posts %}
-    <tr><td>{{ p.title }}</td><td>{{ 'Đã xuất bản' if p.status == 'PUBLISHED' else 'Bản nháp' }}</td><td>{{ p.published_at|dt }}</td>
-        <td class="row-actions"><a class="btn-light" href="{{ url_for('admin.blog_edit', post_id=p.id) }}">Sửa</a>
-            <form method="post" action="{{ url_for('admin.blog_delete', post_id=p.id) }}" data-confirm="Xóa bài viết «{{ p.title }}»?">{{ csrf() }}<button class="btn-danger" data-no-loading>Xóa</button></form></td></tr>
+    <tr><td class="be-list-title"><a href="{{ url_for('admin.blog_edit', post_id=p.id) }}">{{ p.title }}</a></td>
+        <td><span class="status {{ 'status-completed' if p.status == 'PUBLISHED' else 'status-pending' }}">{{ 'Đã xuất bản' if p.status == 'PUBLISHED' else 'Bản nháp' }}</span></td><td class="muted">{{ p.published_at|dt }}</td>
+        <td><div class="row-actions"><a class="btn-light" href="{{ url_for('admin.blog_edit', post_id=p.id) }}">Sửa</a>
+            <form method="post" action="{{ url_for('admin.blog_delete', post_id=p.id) }}" data-confirm="Xóa bài viết «{{ p.title }}»?">{{ csrf() }}<button class="btn-danger" data-no-loading>Xóa</button></form></div></td></tr>
     {% else %}<tr><td colspan="4" class="empty-state">Chưa có bài viết</td></tr>{% endfor %}
     </tbody></table></div></div>
 {% endblock %}

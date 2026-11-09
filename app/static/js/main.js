@@ -161,6 +161,30 @@ document.addEventListener('DOMContentLoaded', function () {
             if (event.key === 'Escape') setUserMenu(false);
         });
     }
+    // Hamburger menu (máy tính bảng / điện thoại)
+    var navToggle = document.getElementById('navToggle');
+    var navHeader = navToggle ? navToggle.closest('.header') : null;
+    if (navToggle && navHeader) {
+        function setNav(open) {
+            navHeader.classList.toggle('nav-open', open);
+            navToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+            navToggle.setAttribute('aria-label', open ? 'Đóng menu điều hướng' : 'Mở menu điều hướng');
+        }
+        navToggle.addEventListener('click', function (event) {
+            event.stopPropagation();
+            setNav(!navHeader.classList.contains('nav-open'));
+        });
+        document.addEventListener('click', function (event) {
+            if (!event.target.closest('.header')) setNav(false);
+        });
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape') setNav(false);
+        });
+        // Bấm "Sản phẩm" mở menu bên: đóng hamburger để không chồng lên nhau
+        var navProducts = document.getElementById('openMenuBtn');
+        if (navProducts) navProducts.addEventListener('click', function () { setNav(false); });
+        window.addEventListener('resize', function () { if (window.innerWidth > 992) setNav(false); });
+    }
     var heroHeader = document.querySelector('.header.header-hero');
 
     if (heroHeader) {
@@ -578,3 +602,563 @@ document.addEventListener('DOMContentLoaded', function () {
     setBackground(0);
     setup();
 })();
+
+/* Trang chủ */
+
+// Video banner + video dịch vụ
+(function () {
+    function tryPlay(v) {
+        var p = v.play();
+        if (p && p.catch) p.catch(function () { /* bị chặn: giữ poster/khung hình đầu */ });
+    }
+    document.querySelectorAll('#heroVideo, [data-service-video]').forEach(function (v) {
+        v.muted = true;
+        tryPlay(v);
+        v.addEventListener('loadeddata', function () { if (v.paused && !v.dataset.userPaused) tryPlay(v); });
+    });
+    document.querySelectorAll('[data-service-toggle]').forEach(function (btn) {
+        var v = btn.parentElement.querySelector('video');
+        if (!v) return;
+        btn.addEventListener('click', function () {
+            var pausing = !v.paused;
+            if (pausing) { v.pause(); v.dataset.userPaused = '1'; } else { delete v.dataset.userPaused; tryPlay(v); }
+            btn.setAttribute('aria-pressed', pausing ? 'true' : 'false');
+            btn.setAttribute('aria-label', (pausing ? btn.dataset.labelPlay : btn.dataset.labelPause) || (pausing ? 'Phát video' : 'Tạm dừng video'));
+            btn.firstElementChild.textContent = pausing ? '▶' : 'II';
+        });
+    });
+})();
+
+// Banner hình ảnh thương hiệu: 2 slider (trái/phải) dùng chung 1 bộ đếm 2s nên luôn đổi ảnh cùng lúc
+(function () {
+    var INTERVAL = 2000;
+    var sliders = Array.prototype.map.call(document.querySelectorAll('[data-bm-slider]'), function (box) {
+        return { slides: box.querySelectorAll('.bm-slide'), current: 0 };
+    }).filter(function (s) { return s.slides.length > 1; });
+    if (!sliders.length) return;
+    var timer = null;
+
+    function preload(s, i) {
+        var el = s.slides[i % s.slides.length], src = el && el.getAttribute('src');
+        if (src) new Image().src = src;
+    }
+    function next() {
+        sliders.forEach(function (s) {
+            var target = (s.current + 1) % s.slides.length;
+            s.slides[s.current].classList.remove('is-active');
+            s.slides[target].classList.add('is-active');
+            s.current = target;
+            preload(s, target + 1);
+        });
+    }
+    function start() { if (!timer) timer = setInterval(next, INTERVAL); }
+    function stop() { clearInterval(timer); timer = null; }
+
+    sliders.forEach(function (s) { preload(s, 1); });
+    start();
+    document.addEventListener('visibilitychange', function () { document.hidden ? stop() : start(); });
+})();
+
+// Slideshow thương hiệu + Cổ điển / Hiện đại / Thể thao
+(function () {
+    var INTERVAL = 2000;
+    var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    document.querySelectorAll('[data-slideshow]').forEach(function (box, boxIndex) {
+        var slides = box.querySelectorAll('.slide');
+        var dots = box.querySelectorAll('.dot');
+        if (slides.length < 2) return;
+        var current = 0, timer = null;
+
+        function show(i) {
+            current = (i + slides.length) % slides.length;
+            slides.forEach(function (s, k) { s.classList.toggle('active', k === current); });
+            dots.forEach(function (d, k) { d.classList.toggle('active', k === current); });
+        }
+        function start() {
+            if (reduceMotion || timer) return;
+            timer = setInterval(function () { show(current + 1); }, INTERVAL);
+        }
+        function stop() { clearInterval(timer); timer = null; }
+
+        dots.forEach(function (d) {
+            d.addEventListener('click', function () {
+                show(parseInt(d.dataset.index, 10));
+                stop(); start();
+            });
+        });
+        box.addEventListener('mouseenter', stop);
+        box.addEventListener('mouseleave', start);
+        document.addEventListener('visibilitychange', function () { document.hidden ? stop() : start(); });
+
+        setTimeout(start, boxIndex * 500);
+    });
+})();
+
+document.addEventListener('DOMContentLoaded', () => {
+    const footer = document.querySelector('.footer');
+    const btns = document.querySelectorAll('.chat-btn');
+    if (!footer || !btns.length) return;
+
+    let ticking = false;
+    const update = () => {
+        const top = footer.getBoundingClientRect().top;
+        btns.forEach(b => {
+            const r = b.getBoundingClientRect();
+            b.classList.toggle('on-footer', r.top + r.height / 2 >= top);
+        });
+        ticking = false;
+    };
+    const onScroll = () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } };
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+    update();
+});
+
+/* Form sản phẩm admin: nhập kích cỡ, tồn kho và ảnh ngay trên trang, lưu một lần. */
+(function () {
+    var form = document.getElementById('productForm');
+    if (!form) return;
+    var cfg = JSON.parse(document.getElementById('pfConfig').textContent);
+    var dirty = false, submitting = false;
+    function $(id) { return document.getElementById(id); }
+    function markDirty() { dirty = true; }
+    form.addEventListener('input', markDirty);
+    form.addEventListener('change', markDirty);
+    window.addEventListener('beforeunload', function (e) {
+        if (dirty && !submitting) { e.preventDefault(); e.returnValue = ''; }
+    });
+    var cancel = $('pfCancel');
+    if (cancel) cancel.addEventListener('click', function (e) {
+        if (dirty && !window.confirm('Các thay đổi chưa lưu sẽ mất. Bạn vẫn muốn rời trang?')) e.preventDefault();
+        else submitting = true;
+    });
+
+    /* ---------- Giá ---------- */
+    var price = $('pfPrice'), sale = $('pfSale'), hint = $('pfPriceHint');
+    function vnd(n) { return Number(n).toLocaleString('vi-VN') + ' ₫'; }
+    function priceHint() {
+        var p = parseInt(price.value, 10), s = parseInt(sale.value, 10);
+        sale.setCustomValidity('');
+        hint.classList.remove('pf-err');
+        if (isNaN(p)) { hint.textContent = ''; return; }
+        if (!isNaN(s) && s > p) {
+            sale.setCustomValidity('Giá khuyến mãi không được lớn hơn giá gốc');
+            hint.classList.add('pf-err');
+            hint.textContent = 'Giá khuyến mãi không được lớn hơn giá gốc.';
+        } else if (!isNaN(s) && s < p) {
+            hint.textContent = 'Khách thấy: ' + vnd(s) + ' (giảm ' + Math.floor((p - s) * 100 / p) + '% so với ' + vnd(p) + ')';
+        } else {
+            hint.textContent = 'Khách thấy: ' + vnd(p);
+        }
+    }
+    price.addEventListener('input', priceHint);
+    sale.addEventListener('input', priceHint);
+    priceHint();
+
+    /* ---------- Kích cỡ / tồn kho ---------- */
+    var tbody = $('pfVariants'), tpl = $('pfRowTpl'), emptyMsg = $('pfVariantsEmpty');
+    function rows() { return Array.prototype.slice.call(tbody.querySelectorAll('tr')); }
+    function cell(row, name) { return row.querySelector('[name="' + name + '"]'); }
+    function refreshVariants() {
+        emptyMsg.hidden = rows().length > 0;
+    }
+    function addRow(size, color, stock, focus) {
+        var row = tpl.content.firstElementChild.cloneNode(true);
+        cell(row, 'variant_size').value = size || '';
+        cell(row, 'variant_color').value = color || '';
+        cell(row, 'variant_stock').value = stock === undefined ? '' : stock;
+        tbody.appendChild(row);
+        refreshVariants();
+        if (focus) cell(row, 'variant_size').focus();
+        return row;
+    }
+    function hasVariant(size, color) {
+        return rows().some(function (r) {
+            return cell(r, 'variant_size').value.trim().toUpperCase() === size.toUpperCase() &&
+                   cell(r, 'variant_color').value.trim().toLowerCase() === color.toLowerCase();
+        });
+    }
+    function blankRows() {
+        rows().forEach(function (r) {
+            var empty = !cell(r, 'variant_id').value && !cell(r, 'variant_size').value.trim() &&
+                        !cell(r, 'variant_color').value.trim() && !cell(r, 'variant_stock').value.trim();
+            if (empty) r.remove();
+        });
+    }
+    $('pfAddRow').addEventListener('click', function () { markDirty(); addRow('', '', undefined, true); });
+    tbody.addEventListener('click', function (e) {
+        var b = e.target.closest('.pf-del');
+        if (!b) return;
+        b.closest('tr').remove();
+        markDirty();
+        refreshVariants();
+    });
+    tbody.addEventListener('input', function (e) {
+        e.target.classList.remove('pf-bad');
+        if (e.target.name === 'variant_stock') refreshVariants();
+    });
+    tbody.addEventListener('keydown', function (e) {
+        if (e.key !== 'Enter') return;
+        e.preventDefault();  // Enter trong bảng không được gửi form
+        var row = e.target.closest('tr'), name = e.target.name;
+        var next = row.nextElementSibling;
+        if (next) cell(next, name).focus();
+        else if (name === 'variant_stock') { markDirty(); addRow('', '', undefined, true); }
+        else e.target.closest('td').nextElementSibling.querySelector('input').focus();
+    });
+    function quickAdd() {
+        var raw = $('pfQuickSizes').value.trim();
+        if (!raw) { $('pfQuickSizes').focus(); return; }
+        var color = $('pfQuickColor').value.trim();
+        var stock = $('pfQuickStock').value.trim();
+        var sizes = [];
+        raw.split(/[\s,;]+/).forEach(function (t) {
+            var m = t.match(/^(\d+)\s*[-–]\s*(\d+)$/);
+            if (m) {
+                var a = parseInt(m[1], 10), b = parseInt(m[2], 10);
+                if (a > b) { var x = a; a = b; b = x; }
+                for (var i = a; i <= b && i - a < 60; i++) sizes.push(String(i));
+            } else if (t) sizes.push(t);
+        });
+        blankRows();
+        sizes.forEach(function (s) { if (!hasVariant(s, color)) addRow(s, color, stock); });
+        $('pfQuickSizes').value = '';
+        markDirty();
+        refreshVariants();
+        var first = rows()[0];
+        if (first) cell(first, 'variant_stock').focus();
+    }
+    $('pfQuickAdd').addEventListener('click', quickAdd);
+    ['pfQuickSizes', 'pfQuickColor', 'pfQuickStock'].forEach(function (id) {
+        $(id).addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); quickAdd(); } });
+    });
+    if (!rows().length && !form.querySelector('[name="name"]').value) addRow('', '', undefined, false);
+    refreshVariants();
+
+    /* ---------- Hình ảnh ---------- */
+    var fileInput = $('pfFile'), tiles = $('pfTiles'), keepBox = $('pfKeep'), primaryInput = $('pfPrimary');
+    var imgMsg = $('pfImgMsg'), drop = $('pfDrop');
+    var items = [], primary = null;
+    var okTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    var maxBytes = cfg.maxMb * 1024 * 1024;
+
+    cfg.images.forEach(function (im) {
+        var it = {type: 'old', id: im.id, url: im.url};
+        items.push(it);
+        if (im.primary) primary = it;
+    });
+
+    function showImgMsg(list) {
+        imgMsg.hidden = !list.length;
+        imgMsg.innerHTML = '';
+        list.forEach(function (t) { var d = document.createElement('div'); d.textContent = t; imgMsg.appendChild(d); });
+    }
+    function sync() {
+        if (!primary || items.indexOf(primary) < 0) primary = items[0] || null;
+        var dt = new DataTransfer(), newIdx = 0, primaryVal = '';
+        keepBox.innerHTML = '';
+        items.forEach(function (it) {
+            var val;
+            if (it.type === 'old') {
+                var h = document.createElement('input');
+                h.type = 'hidden'; h.name = 'keep_image'; h.value = it.id;
+                keepBox.appendChild(h);
+                val = 'old:' + it.id;
+            } else {
+                dt.items.add(it.file);
+                val = 'new:' + newIdx++;
+            }
+            if (it === primary) primaryVal = val;
+        });
+        fileInput.files = dt.files;
+        primaryInput.value = primaryVal;
+    }
+    function render() {
+        tiles.innerHTML = '';
+        items.forEach(function (it) {
+            var d = document.createElement('div');
+            d.className = 'pf-tile' + (it === primary ? ' is-primary' : '');
+            var img = document.createElement('img');
+            img.src = it.url; img.alt = '';
+            var x = document.createElement('button');
+            x.type = 'button'; x.className = 'pf-x'; x.textContent = '×'; x.title = 'Xóa ảnh';
+            x.addEventListener('click', function () {
+                if (it.type === 'new') URL.revokeObjectURL(it.url);
+                items.splice(items.indexOf(it), 1);
+                markDirty(); sync(); render(); showImgMsg([]);
+            });
+            var star = document.createElement('button');
+            star.type = 'button'; star.className = 'pf-star';
+            star.textContent = it === primary ? '★ Ảnh chính' : 'Đặt làm ảnh chính';
+            star.addEventListener('click', function () { primary = it; markDirty(); sync(); render(); });
+            d.appendChild(img); d.appendChild(x); d.appendChild(star);
+            if (it.type === 'new') {
+                var tag = document.createElement('span');
+                tag.className = 'pf-new'; tag.textContent = 'Mới';
+                d.appendChild(tag);
+            }
+            tiles.appendChild(d);
+        });
+    }
+    function addFiles(list) {
+        var errors = [];
+        Array.prototype.forEach.call(list, function (f) {
+            if (okTypes.indexOf(f.type) < 0) { errors.push('“' + f.name + '”: chỉ nhận ảnh JPG, PNG hoặc WEBP.'); return; }
+            if (f.size > maxBytes) { errors.push('“' + f.name + '”: lớn hơn ' + cfg.maxMb + 'MB.'); return; }
+            if (items.length >= cfg.maxImages) { errors.push('Tối đa ' + cfg.maxImages + ' ảnh, đã bỏ qua “' + f.name + '”.'); return; }
+            var dup = items.some(function (it) {
+                return it.type === 'new' && it.file.name === f.name && it.file.size === f.size && it.file.lastModified === f.lastModified;
+            });
+            if (dup) return;
+            var it = {type: 'new', file: f, url: URL.createObjectURL(f)};
+            items.push(it);
+            if (!primary) primary = it;
+        });
+        showImgMsg(errors);
+        markDirty(); sync(); render();
+    }
+    fileInput.addEventListener('change', function () {
+        // Mỗi lần chọn là thêm ảnh vào danh sách; sync() ghi lại input.files gồm tất cả ảnh mới
+        addFiles(Array.prototype.slice.call(fileInput.files));
+    });
+    ['dragenter', 'dragover'].forEach(function (ev) {
+        drop.addEventListener(ev, function (e) { e.preventDefault(); drop.classList.add('is-over'); });
+    });
+    ['dragleave', 'drop'].forEach(function (ev) {
+        drop.addEventListener(ev, function (e) { e.preventDefault(); drop.classList.remove('is-over'); });
+    });
+    drop.addEventListener('drop', function (e) { if (e.dataTransfer && e.dataTransfer.files.length) addFiles(e.dataTransfer.files); });
+    sync(); render();
+
+    var errBox = $('pfErrors');
+    form.addEventListener('submit', function (e) {
+        var problems = [], seen = {};
+        rows().forEach(function (r) { r.querySelectorAll('input').forEach(function (i) { i.classList.remove('pf-bad'); }); });
+        rows().forEach(function (r) {
+            var sz = cell(r, 'variant_size'), co = cell(r, 'variant_color'), st = cell(r, 'variant_stock');
+            var any = sz.value.trim() || co.value.trim() || st.value.trim() || cell(r, 'variant_id').value;
+            if (!any) return;
+            if (!sz.value.trim()) { sz.classList.add('pf-bad'); problems.push('Có dòng chưa nhập size.'); return; }
+            if (st.value.trim() && !/^\d+$/.test(st.value.trim())) { st.classList.add('pf-bad'); problems.push('Tồn kho size ' + sz.value.trim() + ' phải là số nguyên không âm.'); }
+            var key = sz.value.trim().toUpperCase() + '|' + co.value.trim().toLowerCase();
+            if (seen[key]) { sz.classList.add('pf-bad'); problems.push('Size ' + sz.value.trim() + (co.value.trim() ? ' / ' + co.value.trim() : '') + ' bị nhập trùng.'); }
+            seen[key] = true;
+        });
+        if (problems.length) {
+            e.preventDefault();
+            errBox.hidden = false;
+            errBox.innerHTML = '';
+            problems.forEach(function (t) { var d = document.createElement('div'); d.textContent = t; errBox.appendChild(d); });
+            errBox.scrollIntoView({behavior: 'smooth', block: 'center'});
+            return;
+        }
+        errBox.hidden = true;
+        sync();
+        submitting = true;
+    }, true);
+})();
+
+(function () {
+    var root = document.querySelector('.ab');
+    var items = document.querySelectorAll('.ax-reveal');
+    if (!root || !items.length || !('IntersectionObserver' in window) ||
+        window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    var vh = window.innerHeight;
+    items.forEach(function (el) {
+        if (el.getBoundingClientRect().top < vh * 0.95) el.classList.add('is-in');
+    });
+
+    root.classList.add('ax-js');
+    var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+            if (e.isIntersecting) { e.target.classList.add('is-in'); io.unobserve(e.target); }
+        });
+    }, { rootMargin: '0px 0px 10% 0px', threshold: 0 });   // hiện trước khi chạm đáy màn hình
+    items.forEach(function (el) { if (!el.classList.contains('is-in')) io.observe(el); });
+})();
+
+/* Trang Giới thiệu, mục 06: ảnh banner thu nhỏ về giữa, các ảnh khác bung ra theo cuộn.
+   Dán vào CUỐI file JS chính (ngoài DOMContentLoaded cũng được, script nằm cuối trang). */
+(function () {
+    var sec = document.querySelector('.xp');
+    if (!sec) return;
+    var track = sec.querySelector('.xp-track');
+    var pin = sec.querySelector('.xp-pin');
+    var stage = sec.querySelector('.xp-stage');
+    var hero = sec.querySelector('.xp-c');
+    var copy = hero && hero.querySelector('.xp-copy');
+    var shade = hero && hero.querySelector('.xp-shade');
+    if (!track || !pin || !stage || !hero) return;
+
+    var others = Array.prototype.slice.call(stage.querySelectorAll('.xp-ph')).filter(function (el) { return el !== hero; });
+    var mq = window.matchMedia('(min-width: 993px) and (prefers-reduced-motion: no-preference)');
+    var INSET = 10;      // lề của banner lúc đầu (px)
+    var START = 0.05;    // phần cuộn đầu giữ nguyên banner
+    var SPAN = 0.68;     // đoạn cuộn dành cho hiệu ứng; phần còn lại giữ bố cục cuối
+    var W = 0, H = 0, hdr = 110, fin = null, finHero = null, live = false, ticking = false;
+
+    function clamp(v, a, b) { return Math.min(b, Math.max(a, v)); }
+    function lerp(a, b, t) { return a + (b - a) * t; }
+    function easeOut(x) { return 1 - Math.pow(1 - x, 3); }
+    function easeInOut(x) { return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; }
+
+    function box(el) { return { l: el.offsetLeft, t: el.offsetTop, w: el.offsetWidth, h: el.offsetHeight }; }
+
+    function measure() {
+        // bỏ style nội suy để đọc đúng vị trí cuối do CSS quy định
+        hero.style.left = hero.style.top = hero.style.width = hero.style.height = '';
+        others.forEach(function (el) { el.style.transform = ''; el.style.opacity = ''; });
+        W = stage.clientWidth;
+        H = stage.clientHeight;
+        hdr = parseFloat(getComputedStyle(pin).top) || 0;
+        finHero = box(hero);
+        fin = others.map(box);
+    }
+
+    function render() {
+        ticking = false;
+        if (!live) return;
+        var range = track.offsetHeight - pin.offsetHeight;
+        var raw = range > 0 ? clamp((hdr - track.getBoundingClientRect().top) / range, 0, 1) : 1;
+        var t = clamp((raw - START) / SPAN, 0, 1);
+        var m = easeInOut(t);
+
+        hero.style.left = lerp(INSET, finHero.l, m) + 'px';
+        hero.style.top = lerp(0, finHero.t, m) + 'px';
+        hero.style.width = lerp(W - INSET * 2, finHero.w, m) + 'px';
+        hero.style.height = lerp(H, finHero.h, m) + 'px';
+        if (copy) {
+            var a = 1 - clamp(t / 0.3, 0, 1);
+            copy.style.opacity = a;
+            copy.style.transform = 'translateY(' + (-14 * (1 - a)) + 'px)';
+        }
+        if (shade) shade.style.opacity = 1 - clamp(t / 0.55, 0, 1);
+
+        others.forEach(function (el, i) {
+            var d = parseFloat(el.dataset.d) || 0;
+            var e = easeOut(clamp((t - d) / (1 - d), 0, 1));
+            var f = fin[i];
+            var dx = (W / 2 - (f.l + f.w / 2)) * (1 - e);
+            var dy = (H / 2 - (f.t + f.h / 2)) * (1 - e);
+            var s = 0.06 + 0.94 * e;
+            el.style.transform = 'translate3d(' + dx + 'px,' + dy + 'px,0) scale(' + s + ')';
+            el.style.opacity = clamp(e * 4, 0, 1);
+        });
+    }
+
+    function request() { if (!ticking) { ticking = true; requestAnimationFrame(render); } }
+
+    function enable() {
+        if (live) return;
+        sec.classList.add('is-anim');
+        live = true;
+        measure();
+        render();
+    }
+    function disable() {
+        if (!live) return;
+        live = false;
+        sec.classList.remove('is-anim');
+        hero.removeAttribute('style');
+        if (copy) copy.removeAttribute('style');
+        if (shade) shade.removeAttribute('style');
+        others.forEach(function (el) { el.removeAttribute('style'); });
+    }
+    function sync() { if (mq.matches) enable(); else disable(); }
+
+    window.addEventListener('scroll', request, { passive: true });
+    window.addEventListener('resize', function () { if (live) { measure(); request(); } });
+    window.addEventListener('load', function () { if (live) { measure(); request(); } });
+    if (mq.addEventListener) mq.addEventListener('change', sync); else if (mq.addListener) mq.addListener(sync);
+    sync();
+})();
+
+
+/* Đăng nhập / Đăng ký: bảng giữa trượt qua lại, đổi địa chỉ trang mà không tải lại.
+   Dán vào CUỐI file JS chính. Chưa có JS thì nút vẫn là link /register và /login bình thường. */
+(function () {
+    function init() {
+        var stage = document.getElementById('authStage');
+        if (!stage) return;
+
+        var swBox = stage.querySelector('.auth-switch');
+        var panels = { login: stage.querySelector('.auth-panel--login'), register: stage.querySelector('.auth-panel--register') };
+        var copies = stage.querySelectorAll('.auth-copy');
+        var urls = { login: stage.dataset.loginUrl, register: stage.dataset.registerUrl };
+        var titles = { login: stage.dataset.titleLogin, register: stage.dataset.titleRegister };
+        var registerPath = new URL(urls.register, window.location.href).pathname.replace(/\/+$/, '');
+        var search = window.location.search;                 // giữ ?next=... khi chuyển qua lại
+        var mobile = window.matchMedia('(max-width: 820px)');
+        var reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
+        var timer = null;
+
+        function lock(el, on) {                              // phần đang ẩn: bỏ khỏi bàn phím + trình đọc màn hình
+            if (!el) return;
+            el.toggleAttribute('inert', on);
+            if (on) el.setAttribute('aria-hidden', 'true'); else el.removeAttribute('aria-hidden');
+        }
+
+        function render(mode) {
+            stage.dataset.mode = mode;
+            Object.keys(panels).forEach(function (k) { lock(panels[k], k !== mode); });
+            copies.forEach(function (c) { lock(c, c.dataset.showIn !== mode); });
+            if (titles[mode]) document.title = titles[mode];
+        }
+
+        function stretch() {                                 // hiệu ứng bảng giãn ra giữa chừng
+            if (!swBox || mobile.matches || reduced.matches) return;
+            swBox.classList.remove('is-moving');
+            void swBox.offsetWidth;
+            swBox.classList.add('is-moving');
+            clearTimeout(timer);
+            timer = setTimeout(function () { swBox.classList.remove('is-moving'); }, 1300);
+        }
+
+        function go(mode, push) {
+            if (stage.dataset.mode === mode) return;
+            document.querySelectorAll('.flash').forEach(function (f) { f.remove(); });   // bỏ thông báo lỗi của form cũ
+            stretch();
+            render(mode);
+            if (push) { try { history.pushState({ authMode: mode }, '', urls[mode] + search); } catch (err) { /* mở file trực tiếp: bỏ qua */ } }
+            if (!mobile.matches) {
+                var first = panels[mode].querySelector('input:not([type=hidden])');
+                setTimeout(function () { if (first) first.focus({ preventScroll: true }); }, reduced.matches ? 0 : 700);
+            }
+        }
+
+        stage.addEventListener('click', function (e) {
+            var a = e.target.closest('[data-auth-go]');
+            if (!a || e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+            e.preventDefault();
+            go(a.dataset.authGo, true);
+        });
+
+        window.addEventListener('popstate', function () {   // nút Back / Forward của trình duyệt
+            var path = window.location.pathname.replace(/\/+$/, '');
+            go(path === registerPath ? 'register' : 'login', false);
+        });
+
+        try { history.replaceState({ authMode: stage.dataset.mode }, ''); } catch (err) { }
+    }
+
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+})();
+
+// Bảng dữ liệu trên điện thoại: gắn nhãn cột (data-label) từ <th> để CSS hiển thị dạng thẻ.
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('table:not(.pf-table)').forEach(function (table) {
+        var heads = Array.prototype.map.call(table.querySelectorAll('thead th'), function (th) {
+            return th.textContent.replace(/\s+/g, ' ').trim();
+        });
+        if (!heads.length) return;
+        table.querySelectorAll('tbody tr').forEach(function (tr) {
+            var col = 0;
+            Array.prototype.forEach.call(tr.children, function (cell) {
+                if (cell.tagName === 'TD' && heads[col]) cell.setAttribute('data-label', heads[col]);
+                col += cell.colSpan || 1;
+            });
+        });
+    });
+});

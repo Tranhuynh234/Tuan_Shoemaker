@@ -102,9 +102,203 @@ def _product_form_errors(product, form):
     return []
 
 
-def _product_form_context(product):
-    return dict(product=product, categories=db.session.scalars(select(Category).order_by(Category.name)).all(),
+MAX_IMAGES_PER_PRODUCT = 12
+MAX_IMAGE_BYTES = 5 * 1024 * 1024  # 5 MB / ảnh
+
+
+def _product_form_data(product, form=None):
+    """Giá trị hiển thị trong form: lấy từ dữ liệu vừa gửi (khi có lỗi, không bắt nhập lại) hoặc từ sản phẩm."""
+    if form is not None:
+        return {k: form.get(k, "") for k in ("name", "product_code", "slug", "category_id", "brand_id", "price",
+                                              "sale_price", "material", "origin", "description")} | {
+            "is_active": bool(form.get("is_active"))}
+    return {
+        "name": product.name or "", "product_code": product.product_code or "", "slug": product.slug or "",
+        "category_id": product.category_id or "", "brand_id": product.brand_id or "",
+        "price": int(product.price) if product.price is not None else "",
+        "sale_price": int(product.sale_price) if product.sale_price is not None else "",
+        "material": product.material or "", "origin": product.origin or "",
+        "description": product.description or "", "is_active": bool(product.is_active),
+    }
+
+
+def _product_form_context(product, form=None):
+    if form is not None and form.get("variants_managed"):
+        ids, sizes = form.getlist("variant_id"), form.getlist("variant_size")
+        colors, stocks = form.getlist("variant_color"), form.getlist("variant_stock")
+        variants = [{"id": ids[i] if i < len(ids) else "", "size": sizes[i],
+                     "color": colors[i] if i < len(colors) else "", "stock": stocks[i] if i < len(stocks) else ""}
+                    for i in range(len(sizes))]
+    else:
+        variants = [{"id": v.id, "size": v.size, "color": v.color, "stock": v.stock_quantity}
+                    for v in product.variants]
+    images = [{"id": i.id, "url": url_for("static", filename=i.image_url), "primary": i.is_primary}
+              for i in product.images]
+    return dict(product=product, data=_product_form_data(product, form), variants=variants, images=images,
+                had_error=form is not None,
+                max_images=MAX_IMAGES_PER_PRODUCT, max_image_mb=MAX_IMAGE_BYTES // (1024 * 1024),
+                categories=db.session.scalars(select(Category).order_by(Category.name)).all(),
                 brands=db.session.scalars(select(Brand).order_by(Brand.name)).all())
+
+
+def _collect_variants(product, form):
+    """Đọc bảng kích cỡ/tồn kho gửi lên. Trả về (danh sách dòng hợp lệ, danh sách lỗi)."""
+    ids, sizes = form.getlist("variant_id"), form.getlist("variant_size")
+    colors, stocks = form.getlist("variant_color"), form.getlist("variant_stock")
+    code = clean(form.get("product_code"), 50).upper()
+    owned = {v.id for v in product.variants} if product.id else set()
+    rows, errors, seen = [], [], set()
+    for i, raw_size in enumerate(sizes):
+        size = clean(raw_size, 20)
+        color = clean(colors[i] if i < len(colors) else "", 50)
+        stock_raw = clean(stocks[i] if i < len(stocks) else "")
+        vid = parse_int(ids[i]) if i < len(ids) and ids[i] else None
+        if vid not in owned:
+            vid = None
+        if not (size or color or stock_raw or vid):
+            continue  # dòng trống: bỏ qua
+        line = f"Dòng kích cỡ {len(rows) + 1}"
+        if not size:
+            errors.append(f"{line}: chưa nhập size.")
+            continue
+        stock = parse_int(stock_raw, minimum=0) if stock_raw else 0  # để trống = 0
+        if stock is None:
+            errors.append(f"{line} (size {size}): tồn kho phải là số nguyên không âm.")
+            continue
+        key = (size.upper(), color.lower())
+        if key in seen:
+            errors.append(f"Size {size}" + (f" / {color}" if color else "") + " bị nhập trùng.")
+            continue
+        seen.add(key)
+        sku = (f"{code}-{size}" + (f"-{slugify(color).upper()}" if color else "")).upper()
+        rows.append({"id": vid, "size": size, "color": color, "stock": stock, "sku": sku})
+    return rows, errors
+
+
+def _apply_variants(product, rows):
+    existing = {v.id: v for v in product.variants}
+    keep = {r["id"] for r in rows if r["id"]}
+    removed = [v for vid, v in existing.items() if vid not in keep]
+    for v in removed:
+        db.session.delete(v)
+    if removed:
+        db.session.flush()  # xóa trước khi thêm để không đụng ràng buộc (size, màu) khi nhập lại cùng size
+    for r in rows:
+        if r["id"]:
+            v = existing[r["id"]]
+            v.size, v.color, v.stock_quantity = r["size"], r["color"], r["stock"]
+        else:
+            product.variants.append(ProductVariant(size=r["size"], color=r["color"], sku=r["sku"],
+                                                   stock_quantity=r["stock"]))
+
+
+def _sku_conflicts(product, rows):
+    """SKU của dòng mới trùng với biến thể của sản phẩm khác."""
+    new_skus = [r["sku"] for r in rows if not r["id"]]
+    if not new_skus:
+        return []
+    stmt = select(ProductVariant.sku).where(ProductVariant.sku.in_(new_skus))
+    if product.id:
+        stmt = stmt.where(ProductVariant.product_id != product.id)
+    return [f"Mã SKU {sku} đã tồn tại ở sản phẩm khác (hãy đổi mã sản phẩm hoặc size/màu)."
+            for sku in db.session.scalars(stmt).all()]
+
+
+def _save_new_images(files):
+    """Lưu các ảnh mới; lỗi ở bất kỳ ảnh nào thì xóa hết ảnh vừa lưu. Trả về (đường dẫn, lỗi)."""
+    saved, errors = [], []
+    for f in files:
+        f.stream.seek(0, 2)
+        size = f.stream.tell()
+        f.stream.seek(0)
+        if size > MAX_IMAGE_BYTES:
+            errors.append(f"Ảnh “{f.filename}” lớn hơn {MAX_IMAGE_BYTES // (1024 * 1024)}MB.")
+            continue
+        try:
+            saved.append(save_product_image(f))
+        except UploadError as e:
+            errors.append(f"Ảnh “{f.filename}”: {e}")
+    if errors:
+        for path in saved:
+            delete_uploaded_image(path)
+        return [], errors
+    return saved, []
+
+
+def _apply_images(product, form, new_paths):
+    """Giữ/xóa ảnh cũ, thêm ảnh mới, đặt ảnh chính. Trả về danh sách đường dẫn ảnh bị xóa (xóa file sau commit)."""
+    existing = {i.id: i for i in product.images}
+    keep_ids = [i for i in (parse_int(x) for x in form.getlist("keep_image")) if i in existing]
+    removed = []
+    for iid, img in existing.items():
+        if iid not in keep_ids:
+            removed.append(img.image_url)
+            product.images.remove(img)
+    ordered = [existing[i] for i in dict.fromkeys(keep_ids)]
+    for path in new_paths:
+        img = ProductImage(image_url=path)
+        product.images.append(img)
+        ordered.append(img)
+    pick = clean(form.get("primary"), 20)
+    primary = None
+    if pick.startswith("old:"):
+        primary = existing.get(parse_int(pick[4:]))
+    elif pick.startswith("new:"):
+        idx = parse_int(pick[4:], minimum=0)
+        if idx is not None and idx < len(new_paths):
+            primary = ordered[len(ordered) - len(new_paths) + idx]
+    if primary not in ordered:
+        primary = ordered[0] if ordered else None
+    for n, img in enumerate(ordered):
+        img.sort_order = n
+        img.is_primary = img is primary
+    return removed
+
+
+def _product_submit(product):
+    """Một lần bấm Lưu: thông tin + kích cỡ/tồn kho + hình ảnh. Trả về True nếu đã lưu thành công."""
+    form = request.form
+    new_files = [f for f in request.files.getlist("images") if f and f.filename]
+    errors = _product_form_errors(product, form)
+    rows = None
+    if form.get("variants_managed"):
+        rows, v_errors = _collect_variants(product, form)
+        errors += v_errors
+        if not errors:
+            errors += _sku_conflicts(product, rows)
+    if form.get("images_managed"):
+        kept = len([i for i in form.getlist("keep_image") if parse_int(i)])
+        if kept + len(new_files) > MAX_IMAGES_PER_PRODUCT:
+            errors.append(f"Tối đa {MAX_IMAGES_PER_PRODUCT} ảnh cho mỗi sản phẩm.")
+    if errors:
+        db.session.rollback()
+        [flash(e, "error") for e in errors]
+        return False
+    new_paths = []
+    if form.get("images_managed") and new_files:
+        new_paths, img_errors = _save_new_images(new_files)
+        if img_errors:
+            db.session.rollback()
+            [flash(e, "error") for e in img_errors]
+            return False
+    removed_files = []
+    try:
+        if product.id is None:
+            db.session.add(product)
+        if rows is not None:
+            _apply_variants(product, rows)
+        if form.get("images_managed"):
+            removed_files = _apply_images(product, form, new_paths)
+        db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
+        for path in new_paths:
+            delete_uploaded_image(path)
+        flash("Không lưu được: mã sản phẩm, đường dẫn hoặc kích cỡ bị trùng.", "error")
+        return False
+    for path in removed_files:
+        delete_uploaded_image(path)
+    return True
 
 
 @bp.route("/products")
@@ -120,23 +314,24 @@ def products():
     return render_template("admin/products.html", pagination=pagination, products=pagination.items, q=q)
 
 
+def _after_save_redirect(product):
+    nxt = request.form.get("after")
+    flash("Đã lưu sản phẩm." + ("" if product.variants else " Lưu ý: chưa có kích cỡ nào nên khách chưa thể mua."),
+          "success" if product.variants else "warning")
+    if nxt == "new":
+        return redirect(url_for("admin.product_new"))
+    if nxt == "stay":
+        return redirect(url_for("admin.product_edit", product_id=product.id))
+    return redirect(url_for("admin.products"))
+
+
 @bp.route("/products/new", methods=["GET", "POST"])
 def product_new():
     product = Product(is_active=True)
     if request.method == "POST":
-        errors = _product_form_errors(product, request.form)
-        if errors:
-            [flash(e, "error") for e in errors]
-        else:
-            db.session.add(product)
-            try:
-                db.session.commit()
-            except IntegrityError:
-                db.session.rollback()
-                flash("Không lưu được: mã hoặc đường dẫn sản phẩm bị trùng.", "error")
-            else:
-                flash("Đã tạo sản phẩm. Hãy thêm kích cỡ/tồn kho và hình ảnh.", "success")
-                return redirect(url_for("admin.product_edit", product_id=product.id))
+        if _product_submit(product):
+            return _after_save_redirect(product)
+        return render_template("admin/product_form.html", **_product_form_context(Product(is_active=True), request.form))
     return render_template("admin/product_form.html", **_product_form_context(product))
 
 
@@ -144,20 +339,10 @@ def product_new():
 def product_edit(product_id):
     product = _get_or_404(Product, product_id)
     if request.method == "POST":
-        errors = _product_form_errors(product, request.form)
-        if errors:
-            db.session.rollback()
-            [flash(e, "error") for e in errors]
-            product = _get_or_404(Product, product_id)
-        else:
-            try:
-                db.session.commit()
-                flash("Đã cập nhật sản phẩm.", "success")
-                return redirect(url_for("admin.product_edit", product_id=product.id))
-            except IntegrityError:
-                db.session.rollback()
-                flash("Không lưu được: mã hoặc đường dẫn sản phẩm bị trùng.", "error")
-                product = _get_or_404(Product, product_id)
+        if _product_submit(product):
+            return _after_save_redirect(product)
+        product = _get_or_404(Product, product_id)
+        return render_template("admin/product_form.html", **_product_form_context(product, request.form))
     return render_template("admin/product_form.html", **_product_form_context(product))
 
 
@@ -463,6 +648,13 @@ def _blog_save(post):
     return True
 
 
+def _warm_blog_translation(post):
+    """Bài đã đăng: dịch sẵn sang en/zh ở nền để khách mở là thấy ngay bản dịch."""
+    if post.status == POST_PUBLISHED:
+        from app import auto_translate
+        auto_translate.warm_blog(current_app._get_current_object(), post.slug)
+
+
 def _form_sections(post):
     """Các mục để dựng lại form: ưu tiên nội dung admin vừa gửi (khi lưu lỗi), nếu không thì nội dung đã lưu."""
     raw = request.form.get("content") if request.method == "POST" else None
@@ -485,6 +677,7 @@ def blog_new():
     if request.method == "POST" and _blog_save(post):
         db.session.add(post)
         db.session.commit()
+        _warm_blog_translation(post)
         flash("Đã tạo bài viết.", "success")
         return redirect(url_for("admin.blog"))
     return render_template("admin/blog_form.html", post=post, sections=_form_sections(post))
@@ -496,6 +689,7 @@ def blog_edit(post_id):
     if request.method == "POST":
         if _blog_save(post):
             db.session.commit()
+            _warm_blog_translation(post)
             flash("Đã cập nhật bài viết.", "success")
             return redirect(url_for("admin.blog"))
         db.session.rollback()

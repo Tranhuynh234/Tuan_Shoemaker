@@ -1,0 +1,114 @@
+
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+html, body { max-width: 100%; }
+body { overflow-x: hidden; }
+img, video, svg, canvas, iframe { max-width: 100%; }
+iframe { border: 0; }
+.container, .page-block, .narrow { min-width: 0; }
+.shop-card, .cart-line > *, .product-info, .gallery, .category-text, .category-image-wrapper, .main-content, .summary-card { min-width: 0; }
+h1, h2, h3, h4, p, li, td, th, label, dt, dd { overflow-wrap: anywhere; }
+input, select, textarea, button { max-width: 100%; }
+textarea { resize: vertical; }
+
+/* ---------- Laptop nhỏ 993–1279: header không bị logo đè lên menu ---------- */
+@media (min-width: 993px) and (max-width: 1279px) {
+    .header .main-logo-img { height: 72px; }
+    .header-container { min-height: 92px; }
+    .nav-links { gap: 20px; }
+    .nav-links a { letter-spacing: 1.5px; }
+    .nav-right .language-wrapper { margin-left: -8px; }
+}
+
+/* ---------- Trang chủ ---------- */
+@media (max-width: 992px) {
+    .category-image-wrapper .image-box { height: auto; aspect-ratio: 4 / 3; }
+    .brand-grid .image-box { height: auto; aspect-ratio: 4 / 5; }
+    .hero-section { min-height: 0; height: min(100svh, 640px); }
+}
+@media (max-width: 900px) {
+    .category-row, .category-row.reverse { flex-direction: column; align-items: stretch; gap: 20px; text-align: center; margin-bottom: 44px; }
+    .category-text, .category-row.reverse .category-text { text-align: center; padding: 0 8px; }
+    .category-text p { margin: 0 auto; max-width: 520px; }
+    .category-text h3 { font-size: clamp(36px, 10vw, 64px); }
+    .category-image-wrapper { width: 100%; flex: none; }
+}
+@media (max-width: 768px) {
+    .brand-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    .brand-logo-img, .brand-name-text { height: 72px; padding: 10px 12px; letter-spacing: 1px; font-size: 13px; }
+    .section-title { letter-spacing: 4px; }
+    .footer-container { padding-left: 16px; padding-right: 16px; }
+}
+@media (max-width: 360px) {
+    .brand-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* ---------- Khu vực tài khoản & quản trị ---------- */
+@media (max-width: 992px) {
+    .dash { min-height: 0; }
+    .dash .sidebar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 16px; }
+    .dash .sidebar h1 { flex: 0 1 auto; font-size: 22px; }
+    .dash .sidebar p { flex: 1 1 auto; margin: 0; align-self: center; }
+    .dash .sidebar .divider { flex: 0 0 100%; margin: 4px 0; }
+    .dash .sidebar form { margin: 0; display: contents; }
+    .dash .sidebar .menu-item { display: inline-flex; align-items: center; width: auto; min-height: 40px; padding: 8px 14px; border: 1px solid var(--line); border-radius: 20px; font-size: 13px; white-space: nowrap; text-align: center; }
+    .dash .sidebar .menu-item.active { border-color: var(--accent); }
+    .dash .sidebar .linklike { width: auto; }
+    .main-content { padding: 24px 16px; }
+}
+@media (max-width: 640px) {
+    .stats-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .stats-grid .stat-box { flex: none; padding: 16px; }
+    .stat-box h3 { font-size: 24px; overflow-wrap: anywhere; }
+    .welcome-header h2 { font-size: 20px; }
+    .row-between > * { max-width: 100%; }
+    .address-row, .contact-item { flex-direction: column; }
+    .totals { max-width: 100%; }
+    .row-actions { width: 100%; }
+
+    /* Bảng dữ liệu -> dạng thẻ (nhãn cột lấy từ <th> bằng main.js) */
+    .table-scroll { overflow: visible; }
+    .recent-activity { padding: 14px; }
+    .table-scroll table:not(.pf-table), .recent-activity table:not(.pf-table) { display: block; width: 100%; min-width: 0; }
+    .table-scroll table:not(.pf-table) thead, .recent-activity table:not(.pf-table) thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+    .table-scroll table:not(.pf-table) tbody, .table-scroll table:not(.pf-table) tfoot,
+    .recent-activity table:not(.pf-table) tbody, .recent-activity table:not(.pf-table) tfoot { display: block; }
+    .table-scroll table:not(.pf-table) tr, .recent-activity table:not(.pf-table) tr { display: block; margin-bottom: 12px; padding: 4px 14px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+    .table-scroll table:not(.pf-table) td, .recent-activity table:not(.pf-table) td { display: flex; justify-content: space-between; align-items: center; gap: 14px; padding: 9px 0 !important; text-align: right; border-bottom: 1px dashed var(--line); }
+    .table-scroll table:not(.pf-table) tr > :last-child, .recent-activity table:not(.pf-table) tr > :last-child { border-bottom: 0; }
+    .table-scroll table:not(.pf-table) td::before, .recent-activity table:not(.pf-table) td::before { content: attr(data-label); flex: 0 0 auto; max-width: 45%; font-size: 12px; font-weight: 600; text-align: left; color: var(--text-gray); }
+    .table-scroll table:not(.pf-table) td:not([data-label])::before, .recent-activity table:not(.pf-table) td:not([data-label])::before { display: none; }
+    .table-scroll table:not(.pf-table) td.empty-state, .recent-activity table:not(.pf-table) td.empty-state { display: block; }
+    .table-scroll table:not(.pf-table) td .row-actions, .recent-activity table:not(.pf-table) td .row-actions { width: auto; justify-content: flex-end; }
+    .pf-table-wrap { overflow-x: auto; }
+}
+
+/* ---------- Chữ & vùng bấm trên điện thoại ---------- */
+@media (max-width: 820px) {
+    small, .muted small { font-size: 12px; }
+    .footer-logo p { font-size: 11px; }
+    .sp-paper .sp-hint { font-size: .6rem; }
+}
+@media (pointer: coarse), (max-width: 820px) {
+    .pagination a, .pagination span { min-width: 40px; min-height: 40px; display: inline-flex; align-items: center; justify-content: center; }
+    .btn-light, .btn-danger { min-height: 40px; }
+    .cat-toggle { min-height: 44px; }
+    .thumb { min-width: 48px; min-height: 48px; }
+    .flash-close { min-width: 40px; min-height: 40px; }
+}
+
+@media (max-width: 820px) {
+    .dash .sidebar p { font-size: 11px; }
+    .footer-links a { display: inline-block; padding: 10px 4px; }
+    td a, .recent-activity td a { display: inline-block; padding: 8px 0; }
+    .auth-link { display: inline-block; padding: 8px 0 2px; }
+    .breadcrumb a { display: inline-block; padding: 6px 0; }
+    .slideshow-dots .dot { position: relative; }
+    .slideshow-dots .dot::after { content: ""; position: absolute; inset: -10px; }
+    .sp-dots a { position: relative; }
+    .sp-dots a::after { content: ""; position: absolute; inset: -10px; }
+    .pf-star { min-height: 40px; }
+    .be-tool { min-height: 40px; min-width: 40px; }
+}
+@media (pointer: coarse) {
+    .service-toggle { width: 44px; height: 44px; }
+    .pf-x { width: 36px; height: 36px; font-size: 20px; }}

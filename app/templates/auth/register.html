@@ -1,72 +1,10 @@
 {% extends 'base.html' %}
-{% from 'partials/macros.html' import csrf %}
+{% from 'partials/auth_card.html' import auth_card %}
 
 {% block title %}Đăng ký - TUẤN{% endblock %}
 
 {% block content %}
 <div class="auth-wrap page-block">
-    <div class="auth-card">
-        <div class="auth-header">
-            <h2>Đăng ký</h2>
-        </div>
-
-        <form method="POST">
-            {{ csrf() }}
-
-            <div class="form-group">
-                <label for="phone">Số điện thoại</label>
-                <input 
-                    type="tel" 
-                    name="phone" 
-                    id="phone" 
-                    class="form-control" 
-                    value="{{ form.get('phone', '') }}" 
-                    placeholder="Nhập số điện thoại" 
-                    maxlength="20" 
-                    autocomplete="tel" 
-                    required
-                >
-            </div>
-
-            <div class="form-group">
-                <label for="password">Mật khẩu <small class="muted" style="font-weight: normal;">(Tối thiểu 8 ký tự)</small></label>
-                <input 
-                    type="password" 
-                    name="password" 
-                    id="password" 
-                    class="form-control" 
-                    placeholder="Nhập mật khẩu" 
-                    minlength="8" 
-                    autocomplete="new-password" 
-                    required
-                >
-            </div>
-
-            <div class="form-group">
-                <label for="confirm_password">Xác nhận mật khẩu</label>
-                <input 
-                    type="password" 
-                    name="confirm_password" 
-                    id="confirm_password" 
-                    class="form-control" 
-                    placeholder="Nhập lại mật khẩu" 
-                    minlength="8" 
-                    autocomplete="new-password" 
-                    required
-                >
-            </div>
-
-            <button type="submit" class="auth-submit" data-loading-text="Đang tạo tài khoản...">
-                Tạo tài khoản
-            </button>
-
-            <div class="auth-links">
-                <p>
-                    Đã có tài khoản? 
-                    <a href="{{ url_for('auth.login') }}">Đăng nhập</a>
-                </p>
-            </div>
-        </form>
-    </div>
+    {{ auth_card('register', form) }}
 </div>
 {% endblock %}

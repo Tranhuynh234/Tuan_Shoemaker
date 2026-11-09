@@ -1,10 +1,11 @@
+import json
 import logging
 import mimetypes
 import os
 import secrets
 
 import click
-from flask import Flask, g, render_template, request, session
+from flask import Flask, g, jsonify, render_template, request, session
 from flask_login import current_user
 from sqlalchemy import event
 from sqlalchemy.engine import Engine
@@ -61,7 +62,7 @@ def create_app(config=None):
 def _register_hooks(app):
     from .models.constants import (CONTACT_STATUS_LABELS, ORDER_STATUS_LABELS, PAYMENT_STATUS_LABELS)
     from .services import cart_service, catalog_service
-    from .i18n import DEFAULT_LANG, LANGS, translate_html
+    from .i18n import DEFAULT_LANG, LANGS, translate_html, translate_json
     from .utils import formatting
     from .utils.csrf import generate_csrf_token, protect_csrf
 
@@ -69,6 +70,15 @@ def _register_hooks(app):
     def detect_language():
         lang = request.cookies.get("lang", DEFAULT_LANG)
         g.lang = lang if lang in LANGS else DEFAULT_LANG
+
+    @app.before_request
+    def allow_big_product_form():
+        """Form sản phẩm gửi nhiều ảnh cùng lúc nên được nâng giới hạn dung lượng (từng ảnh vẫn tối đa 5MB)."""
+        if request.method == "POST" and request.path.startswith("/admin/products"):
+            try:
+                request.max_content_length = app.config.get("PRODUCT_FORM_MAX_BYTES", 64 * 1024 * 1024)
+            except AttributeError:  # Flask < 3.1 không cho đổi theo từng request
+                pass
 
     app.before_request(protect_csrf)
     app.jinja_env.globals["csrf_token"] = generate_csrf_token  # dùng được cả trong macro
@@ -90,6 +100,15 @@ def _register_hooks(app):
                                    if isinstance(item, dict))
         return ctx
 
+    @app.before_request
+    def warm_translations_once():
+        """Lần có yêu cầu đầu tiên sau khi bật server: dịch sẵn các bài blog ở nền (không làm chậm khách)."""
+        from . import auto_translate as _at
+        if app.config.get("_warm_started") or app.testing or not _at.enabled():
+            return
+        app.config["_warm_started"] = True
+        _at.warm_blog(app)
+
     @app.after_request
     def translate_response(resp):
         """Khi chọn tiếng Anh / Trung: dịch HTML các trang khách hàng (trang admin giữ tiếng Việt)."""
@@ -97,6 +116,12 @@ def _register_hooks(app):
         if (lang != DEFAULT_LANG and resp.mimetype == "text/html" and not resp.direct_passthrough
                 and request.blueprint != "admin"):
             resp.set_data(translate_html(resp.get_data(as_text=True), lang))
+        elif (lang != DEFAULT_LANG and resp.mimetype == "application/json" and not resp.direct_passthrough
+                and request.blueprint != "admin"):
+            try:
+                resp.set_data(json.dumps(translate_json(resp.get_json(silent=True), lang), ensure_ascii=False))
+            except Exception:  # không dịch được thì trả nguyên bản tiếng Việt
+                pass
         return resp
 
     @app.after_request
@@ -112,7 +137,7 @@ def _register_errors(app):
         400: ("Yêu cầu không hợp lệ", "Phiên làm việc không hợp lệ hoặc dữ liệu gửi lên không đúng. Vui lòng tải lại trang."),
         403: ("Không có quyền truy cập", "Bạn không có quyền thực hiện thao tác này."),
         404: ("Không tìm thấy trang", "Trang bạn tìm không tồn tại hoặc đã bị di chuyển."),
-        413: ("Tệp quá lớn", "Dung lượng tệp vượt quá giới hạn 5 MB."),
+        413: ("Tệp quá lớn", "Dung lượng tệp tải lên vượt quá giới hạn cho phép (mỗi ảnh tối đa 5 MB)."),
         500: ("Đã xảy ra lỗi", "Hệ thống gặp sự cố. Vui lòng thử lại sau."),
     }
 
@@ -123,6 +148,8 @@ def _register_errors(app):
             title, text = messages[code]
             if code == 400 and getattr(err, "description", None) and "Phiên" in str(err.description):
                 text = err.description
+            if request.is_json or request.path.startswith("/api/"):  # fetch/JSON: trả JSON để trang hiện đúng lỗi
+                return jsonify({"error": text}), code
             return render_template("error.html", code=code, title=title, message=text), code
         return handler
 
@@ -147,6 +174,62 @@ def _register_cli(app):
         from .services import catalog_service
         created = catalog_service.sync_categories()
         click.echo("Đã thêm: " + ", ".join(created) if created else "Danh mục đã đầy đủ, không có gì để thêm.")
+
+    @app.cli.command("translate-check")
+    def translate_check_command():
+        """Thử dịch 1 câu để biết dịch tự động đã chạy được chưa (hiện lỗi thật nếu có)."""
+        from .i18n import auto_translate
+        provider = os.environ.get("TRANSLATE_PROVIDER", "")
+        click.echo(f"TRANSLATE_PROVIDER = {provider!r}")
+        if not auto_translate.enabled():
+            raise click.ClickException("Chưa bật: thêm TRANSLATE_PROVIDER=free vào file .env rồi chạy lại.")
+        call = {"anthropic": auto_translate._anthropic, "google": auto_translate._google,
+                "free": auto_translate._free}[provider]
+        sample = ["Quy trình sản xuất giày da chuẩn mực"]
+        for lang in ("en", "zh"):
+            try:
+                out = call(sample, lang)
+            except Exception as exc:
+                raise click.ClickException(f"Gọi dịch thất bại ({lang}): {exc!r}")
+            click.echo(f"[{lang}] {out}")
+            if not out or out[0] is None:
+                raise click.ClickException("Dịch vụ không trả kết quả (có thể bị chặn mạng hoặc giới hạn tốc độ).")
+        click.echo("OK: dịch tự động hoạt động.")
+
+    @app.cli.command("translate-site")
+    @click.option("--lang", "langs", multiple=True, default=("en", "zh"), help="Ngôn ngữ cần dịch (mặc định en và zh).")
+    def translate_site_command(langs):
+        """Mở lần lượt mọi trang khách hàng (kể cả từng sản phẩm, từng bài blog) để dịch và lưu cache một lượt."""
+        from sqlalchemy import select
+        from .i18n import auto_translate
+        from .models import BlogPost, Product
+        from .models.constants import POST_PUBLISHED
+        from .services.catalog_service import CATEGORY_TREE
+        if not auto_translate.enabled():
+            raise click.ClickException("Chưa bật dịch tự động: đặt TRANSLATE_PROVIDER và API key trong .env.")
+        auto_translate.WAIT = 900  # lệnh này phải chờ dịch xong từng trang
+        app.config["_warm_started"] = True  # tự lệnh này đã dịch hết, không cần dịch sẵn nền
+        urls = ["/", "/about", "/portfolio", "/products", "/blog", "/contact", "/auth/login", "/login", "/register",
+                "/forgot-password", "/cart/"]
+        urls += [f"/products?category={g['slug']}" for g in CATEGORY_TREE]
+        urls += [f"/products?category={slug}" for g in CATEGORY_TREE for _, slug in g["items"]]
+        urls += [f"/products?page={n}" for n in (2, 3, 4)]
+        urls += [f"/products/{slug}" for slug in db.session.scalars(select(Product.slug).where(Product.is_active.is_(True)))]
+        urls += [f"/blog/{slug}" for slug in db.session.scalars(
+            select(BlogPost.slug).where(BlogPost.status == POST_PUBLISHED))]
+        ok = fail = 0
+        client = app.test_client()
+        for lang in langs:
+            client.set_cookie("lang", lang)
+            for url in urls:
+                resp = client.get(url, follow_redirects=True)
+                if resp.status_code == 200:
+                    ok += 1
+                else:
+                    fail += 1
+                    click.echo(f"  bỏ qua {url} ({resp.status_code})")
+            click.echo(f"[{lang}] xong {len(urls)} địa chỉ.")
+        click.echo(f"Hoàn tất: {ok} trang dịch được, {fail} trang bỏ qua. Cache: {auto_translate._path()}")
 
     @app.cli.command("create-admin")
     @click.option("--phone", default=None, help="Số điện thoại quản trị viên.")

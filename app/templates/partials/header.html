@@ -1,12 +1,6 @@
 <header class="header {{ header_class|default('') }}">
     <div class="header-container">
 
-        <nav class="nav-links nav-left">
-            <a href="{{ url_for('main.home') }}">TRANG CHỦ</a>
-            <a href="{{ url_for('main.about') }}">GIỚI THIỆU</a>
-            <a href="{{ url_for('main.portfolio') }}">PORTFOLIO</a>
-        </nav>
-
         <div class="logo-container">
             <a href="{{ url_for('main.home') }}">
                 <img src="{{ url_for('static', filename='images/logo/logo-tuan.png') }}"
@@ -14,24 +8,18 @@
             </a>
         </div>
 
-        <nav class="nav-links nav-right">
-            {% if current_user.is_authenticated %}
-            {% if current_user.is_admin %}
-            <a href="{{ url_for('admin.dashboard') }}">QUẢN TRỊ</a>
-            {% else %}
-            <a href="{{ url_for('account.dashboard') }}">TÀI KHOẢN</a>
-            <a href="{{ url_for('cart.view_cart') }}">
-                GIỎ HÀNG{% if cart_count %} ({{ cart_count }}){% endif %}
-            </a>
-            {% endif %}
-            {% endif %}
+        <div class="nav-panel" id="primaryNav">
+        <nav class="nav-links nav-left">
+            <a href="{{ url_for('main.home') }}">TRANG CHỦ</a>
+            <a href="{{ url_for('main.about') }}">GIỚI THIỆU</a>
+            <a href="{{ url_for('main.portfolio') }}">PORTFOLIO</a>
+        </nav>
 
+        <nav class="nav-links nav-right">
             <!-- NÚT BLOG + SẢN PHẨM -->
             <a href="{{ url_for('main.blog_list') }}" class="header-blog-link">BLOG</a>
             <a href="#" id="openMenuBtn" data-open-menu>SẢN PHẨM</a>
 
-
-            <!-- ICON NGƯỜI DÙNG: bấm để mở bảng Đăng ký / Đăng nhập / Sáng-tối / Ngôn ngữ -->
             <div class="user-menu">
                 <button type="button" class="user-menu-btn" id="userMenuToggle" aria-label="Tài khoản và cài đặt"
                     aria-haspopup="true" aria-expanded="false" aria-controls="userPopup">
@@ -44,11 +32,17 @@
 
                 <div class="user-popup" id="userPopup" hidden>
                     {% if current_user.is_authenticated %}
+                    <a class="user-row user-row-link"
+                        href="{{ url_for('admin.dashboard') if current_user.is_admin else url_for('account.dashboard') }}">TÀI KHOẢN</a>
+                    {% if not current_user.is_admin %}
+                    <a class="user-row user-row-link" href="{{ url_for('cart.view_cart') }}">GIỎ HÀNG{% if cart_count %} ({{ cart_count }}){% endif %}</a>
+                    {% endif %}
                     <form method="post" action="{{ url_for('auth.logout') }}" class="user-row-form">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <button type="submit" class="user-row user-row-link">ĐĂNG XUẤT</button>
                     </form>
                     {% else %}
+                    <a class="user-row user-row-link" href="{{ url_for('cart.view_cart') }}">GIỎ HÀNG{% if cart_count %} ({{ cart_count }}){% endif %}</a>
                     <a class="user-row user-row-link" href="{{ url_for('auth.register') }}">ĐĂNG KÝ</a>
                     <a class="user-row user-row-link" href="{{ url_for('auth.login') }}">ĐĂNG NHẬP</a>
                     {% endif %}
@@ -76,53 +70,43 @@
                             </g>
                         </svg>
                     </button>
+                </div>
+            </div>
 
-                    <!-- NGÔN NGỮ -->
-                    <div class="language-wrapper user-row">
-                        <span class="user-row-label">NGÔN NGỮ</span>
-                        <button type="button" class="language-flag" id="languageToggle" aria-label="Chọn ngôn ngữ"
-                            aria-expanded="false">
-                            {% set flag_files = {'vi': 'Flag_of_Vietnam.png', 'en': 'Flag_of_the_United_Kingdom.png',
-                            'zh': 'Flag_of_China.png'} %}
-                            <img src="{{ url_for('static', filename='images/language/' ~ flag_files.get(lang|default('vi'), 'Flag_of_Vietnam.png')) }}"
-                                alt="{{ lang|default('vi')|upper }}"
-                                style="width: 22px; height: auto; object-fit: contain;">
-                        </button>
+            <!-- NGÔN NGỮ: nằm ngoài, ngay sau icon user -->
+            <div class="language-wrapper">
+                <button type="button" class="language-flag" id="languageToggle" aria-label="Chọn ngôn ngữ"
+                    aria-expanded="false">
+                    {% set flag_files = {'vi': 'VN.png', 'en': 'UK.png', 'zh': 'CN.png'} %}
 
-                        <div class="language-popup" id="languagePopup" hidden>
-                            <form method="post" action="{{ url_for('main.set_language') }}">
-                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                <input type="hidden" name="next" value="{{ request.full_path.rstrip('?') }}">
+                    <img src="{{ url_for('static', filename='images/language/' ~ flag_files.get(lang|default('vi'), 'VN.png')) }}" alt="{{ lang|default('vi')|upper }}">
+                </button>
 
-                                <p class="language-title">Chọn ngôn ngữ</p>
+                <div class="language-popup" id="languagePopup" hidden>
+                    <form method="post" action="{{ url_for('main.set_language') }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="next" value="{{ request.full_path.rstrip('?') }}">
 
-                                <label class="language-option">
-                                    <input type="radio" name="lang" value="en" {% if lang|default('vi')=='en'
-                                        %}checked{% endif %}>
-                                    <span>English</span>
-                                </label>
-
-                                <label class="language-option">
-                                    <input type="radio" name="lang" value="vi" {% if lang|default('vi')=='vi'
-                                        %}checked{% endif %}>
-                                    <span>Tiếng Việt</span>
-                                </label>
-
-                                <label class="language-option">
-                                    <input type="radio" name="lang" value="zh" {% if lang|default('vi')=='zh'
-                                        %}checked{% endif %}>
-                                    <span>中文</span>
-                                </label>
-
-                                <button type="submit" class="language-save">
-                                    Lưu <span>⟶</span>
-                                </button>
-                            </form>
+                        <div class="language-flags">
+                            {% for code, file, name in [('vi', 'VN.png', 'Tiếng Việt'), ('en', 'UK.png', 'English'), ('zh', 'CN.png', '中文')] %}
+                            {% if lang|default('vi') != code %}
+                            <button type="submit" name="lang" value="{{ code }}" data-no-loading
+                                class="language-flag-option" title="{{ name }}" aria-label="{{ name }}">
+                                <img src="{{ url_for('static', filename='images/language/' ~ file) }}" alt="{{ name }}">
+                            </button>
+                            {% endif %}
+                            {% endfor %}
                         </div>
-                    </div>
+                    </form>
                 </div>
             </div>
         </nav>
+        </div>
+
+        <button type="button" class="nav-toggle" id="navToggle" aria-label="Mở menu điều hướng" aria-expanded="false"
+            aria-controls="primaryNav">
+            <span class="nav-toggle-bar"></span><span class="nav-toggle-bar"></span><span class="nav-toggle-bar"></span>
+        </button>
 
     </div>
 </header>

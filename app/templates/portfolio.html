@@ -56,11 +56,10 @@
                         <div class="sp-inner">
                             <article class="bk bk--red">
                                 <div class="bk-page bk-left">
-                                    <div class="bk-head"><span class="bk-kicker">Giới thiệu</span></div>
                                     <h2 class="bk-title bk-title--band">Giới thiệu chung<br>về doanh nghiệp</h2>
                                     <div class="bk-cols">
                                         <div class="bk-item">
-                                            <h4>Lịch sử hình thành và phát triển</h4>
+                                            <h4>Lịch sử phát triển</h4>
                                             <p>Khởi nguồn năm 1978 tại phố Mai Thúc Loan, Huế. Gần 50 năm gìn giữ nghề
                                                 làm giày thủ công, từng bước hiện đại hóa để vươn ra thị trường trong và
                                                 ngoài nước.</p>
@@ -101,15 +100,14 @@
                             <article class="bk bk--yellow">
                                 <div class="bk-page bk-left">
                                     {{ photo('3.1.jpg', 'Ảnh 03-1 · Nhà xưởng', 'bk-top') }}
-                                    <div class="bk-head"><span class="bk-kicker">Thế mạnh</span></div>
-                                    <h2 class="bk-title">Năng lực<br>cốt lõi</h2>
+                                    <h2 class="bk-title bk-title--band">Năng lực cốt lõi</h2>
                                     <div class="bk-cols">
                                         <div class="bk-item">
                                             <h4>Năng lực nhân sự</h4>
                                             <p>Đội ngũ thợ lành nghề cùng nhân lực chuyên nghiệp ở mọi công đoạn.</p>
                                         </div>
                                         <div class="bk-item">
-                                            <h4>Năng lực tài chính và pháp lý</h4>
+                                            <h4>Tài chính - Pháp lý</h4>
                                             <p><span class="bk-todo">[Bổ sung sau]</span></p>
                                         </div>
                                         <div class="bk-item">
@@ -139,8 +137,7 @@
                         <div class="sp-inner">
                             <article class="bk bk--blue">
                                 <div class="bk-page bk-left">
-                                    <div class="bk-head"><span class="bk-kicker">Sản phẩm & Dịch vụ</span></div>
-                                    <h2 class="bk-title bk-title--box">Danh mục<br>sản phẩm</h2>
+                                    <h2 class="bk-title bk-title--box">Danh mục sản phẩm</h2>
                                     <div class="bk-cols">
                                         <div class="bk-item">
                                             <h4>Phân loại sản phẩm</h4>
@@ -157,149 +154,146 @@
                                     </div>
                                     {{ photo('4.1.jpg', 'Ảnh 04-1 · Sản phẩm', 'bk-grow') }}
                                 </div>
-                                <div class="bk-page bk-right bk-right--bleed">
-                                    {{ photo('4.2.jpg', 'Ảnh 04-2 · Nền trang phải (toàn trang)', 'bk-bleed') }}
-                                    <div class="bk-over">
-                                        <span class="bk-label">Bốn thương hiệu</span>
-                                        <div class="bk-cards">
-                                            <a class="bk-note bk-logo"
-                                                href="{{ url_for('main.products', brand='kodoss') }}" title="KODOSS">
-                                                <img src="{{ url_for('static', filename='images/logo/logo-kodoss.png') }}"
-                                                    alt="KODOSS" loading="lazy">
-                                            </a>
-                                            <a class="bk-note bk-logo"
-                                                href="{{ url_for('main.products', brand='tuan') }}" title="TUẤN">
-                                                <img src="{{ url_for('static', filename='images/logo/logo-tuan.png') }}"
-                                                    alt="TUẤN" loading="lazy">
-                                            </a>
-                                            <a class="bk-note bk-logo"
-                                                href="{{ url_for('main.products', brand='nauts') }}" title="NAUT'S">
-                                                <img src="{{ url_for('static', filename='images/logo/logo-nauts.png') }}"
-                                                    alt="NAUT'S" loading="lazy">
-                                            </a>
-                                            <a class="bk-note bk-logo"
-                                                href="{{ url_for('main.products', brand='magari') }}" title="MAGARI">
-                                                <img src="{{ url_for('static', filename='images/logo/logo-magari.png') }}"
-                                                    alt="MAGARI" loading="lazy">
-                                            </a>
-                                        </div>
-                                        <a class="bk-btn" href="{{ url_for('main.products') }}">XEM SẢN PHẨM <span
-                                                aria-hidden="true">→</span></a>
+                                <div class="bk-page bk-right bk-right--logos">
+                                    <div class="bk-cards">
+                                        <a class="bk-note bk-logo" href="{{ url_for('main.products', brand='kodoss') }}"
+                                            aria-label="KODOSS">
+                                            <img src="{{ url_for('static', filename='images/logo/logo-kodoss.png') }}"
+                                                alt="KODOSS" loading="lazy">
+                                        </a>
+                                        <a class="bk-note bk-logo" href="{{ url_for('main.products', brand='tuan') }}"
+                                            aria-label="TUẤN">
+                                            <img src="{{ url_for('static', filename='images/logo/logo-tuan.png') }}"
+                                                alt="TUẤN" loading="lazy">
+                                        </a>
+                                        <a class="bk-note bk-logo" href="{{ url_for('main.products', brand='nauts') }}"
+                                            aria-label="NAUT'S">
+                                            <img src="{{ url_for('static', filename='images/logo/logo-nauts.png') }}"
+                                                alt="NAUT'S" loading="lazy">
+                                        </a>
+                                        <a class="bk-note bk-logo" href="{{ url_for('main.products', brand='magari') }}"
+                                            aria-label="MAGARI">
+                                            <img src="{{ url_for('static', filename='images/logo/logo-magari.png') }}"
+                                                alt="MAGARI" loading="lazy">
+                                        </a>
                                     </div>
-                                </div>
-                            </article>
-                        </div>
-                    </section>
-
-                    <!-- ============ 05. DỰ ÁN TIÊU BIỂU & CASE STUDIES (đỏ) ============ -->
-                    {% set ch = chapters[3] %}
-                    <section class="sp-panel" id="{{ ch.id }}" data-title="{{ ch.title }}" data-bg="{{ ch.bg }}">
-                        <div class="sp-inner">
-                            <article class="bk bk--red">
-                                <div class="bk-page bk-left">
-                                    <h2 class="bk-title bk-title--band">Dự án tiêu biểu<br></h2>
-                                    <div class="bk-item">
-                                        <h4>Khách hàng, đối tác</h4>
-                                        <p>Phục vụ khách hàng và đối tác trong, ngoài nước; hiện diện tại nhiều hội chợ,
-                                            triển lãm quốc tế như Sourcing At Magic (Las Vegas).</p>
-                                    </div>
-                                    <div class="bk-steps">
-                                        <div class="bk-step"><b>1</b>
-                                            <h4>Bối cảnh</h4>
-                                            <p>Đơn hàng số lượng lớn, cần chất lượng đồng đều và đúng tiến độ.</p>
-                                        </div>
-                                        <div class="bk-step"><b>2</b>
-                                            <h4>Giải pháp</h4>
-                                            <p>Hệ thống sản xuất đồng bộ, gia công linh hoạt theo từng mẫu.</p>
-                                        </div>
-                                        <div class="bk-step"><b>3</b>
-                                            <h4>Kết quả</h4>
-                                            <p><span class="bk-todo">[Bổ sung sau]</span></p>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="bk-page bk-right bk-right--d">
-                                    <div class="bk-tall">
-                                        {{ photo('5.1.jpg', 'Ảnh 05-1') }}
-                                        {{ photo('5.2.jpg', 'Ảnh 05-2') }}
-                                        {{ photo('5.3.jpg', 'Ảnh 05-3') }}
-                                    </div>
-                                    <div class="bk-capt">
-                                        <p>Những dự án và hội chợ, triển lãm tiêu biểu của TUẤN.</p>
-                                    </div>
-                                </div>
-                            </article>
-                        </div>
-                    </section>
-
-                    <!-- ============ 06. THÔNG TIN LIÊN HỆ (xanh) ============ -->
-                    {% set ch = chapters[4] %}
-                    <section class="sp-panel" id="{{ ch.id }}" data-title="{{ ch.title }}" data-bg="{{ ch.bg }}">
-                        <div class="sp-inner">
-                            <article class="bk bk--blue">
-                                <div class="bk-page bk-left">
-                                    <div class="bk-head"><span class="bk-kicker">Kết nối</span></div>
-                                    <h2 class="bk-title bk-title--box">Thông tin<br>liên hệ</h2>
-                                    <ul class="bk-contact">
-                                        <li><i class="fa-solid fa-location-dot"></i>
-                                            <div>
-                                                <h4>Địa chỉ</h4>
-                                                <p>282A Hòa Bình, Phường Phú Thạnh, TP. Hồ Chí Minh</p>
-                                            </div>
-                                        </li>
-                                        <li><i class="fa-solid fa-phone"></i>
-                                            <div>
-                                                <h4>Điện thoại</h4>
-                                                <p>+84 919 772 295</p>
-                                            </div>
-                                        </li>
-                                        <li><i class="fa-regular fa-clock"></i>
-                                            <div>
-                                                <h4>Giờ mở cửa</h4>
-                                                <p>Thứ Hai – Chủ Nhật · 9:00 – 21:00</p>
-                                            </div>
-                                        </li>
-                                        <li><i class="fa-regular fa-envelope"></i>
-                                            <div>
-                                                <h4>Email, website</h4>
-                                                <p><span class="bk-todo">[Bổ sung email và website chính thức]</span>
-                                                </p>
-                                            </div>
-                                        </li>
-                                    </ul>
-                                    <a class="bk-btn" href="{{ url_for('main.contact') }}">LIÊN HỆ NGAY <span
+                                    <a class="bk-btn" href="{{ url_for('main.products') }}">XEM SẢN PHẨM <span
                                             aria-hidden="true">→</span></a>
                                 </div>
-                                <div class="bk-page bk-right bk-right--e">
-                                    {{ photo('6.1.jpg', 'Ảnh 06-1 · Cửa hàng / nhà xưởng', 'bk-big') }}
-                                    <div class="bk-row">
-                                        <figure class="bk-photo bk-video">
-                                            <video src="{{ url_for('static', filename='images/videos/baohanh.mp4') }}" muted loop playsinline autoplay preload="metadata"></video>
-                                        </figure>
-                                        <figure class="bk-photo bk-video">
-                                            <video src="{{ url_for('static', filename='images/videos/cuahang.mp4') }}" muted loop playsinline autoplay preload="metadata"></video>
-                                        </figure>
-                                    </div>
-                                </div>
                             </article>
                         </div>
                     </section>
 
-                </div>
-            </div>
-            <!-- thanh tiến trình nằm trên dải hoa văn dưới của cuốn chiếu -->
-            <div class="sp-controls">
-                <span id="currentChapter">01 / {{ '%02d' % (chapters|length) }}</span>
-                <nav class="sp-dots" aria-label="Các mục">
-                    {% for c in chapters %}<a href="#{{ c.id }}" aria-label="{{ c.title }}"></a>{% endfor %}
-                </nav>
-                <div class="sp-progress">
-                    <div id="chapterProgressBar"></div>
-                </div>
-                <span id="currentTitle" class="sp-current-title">{{ chapters[0].title }}</span>
-                <a class="sp-hint" href="{{ url_for('main.home') }}">TRANG CHỦ</a>
+                <!-- ============ 05. DỰ ÁN TIÊU BIỂU & CASE STUDIES (đỏ) ============ -->
+                {% set ch = chapters[3] %}
+                <section class="sp-panel" id="{{ ch.id }}" data-title="{{ ch.title }}" data-bg="{{ ch.bg }}">
+                    <div class="sp-inner">
+                        <article class="bk bk--red">
+                            <div class="bk-page bk-left">
+                                <h2 class="bk-title bk-title--band">Dự án tiêu biểu<br></h2>
+                                <div class="bk-item">
+                                    <h4>Khách hàng, đối tác</h4>
+                                    <p>Phục vụ khách hàng và đối tác trong, ngoài nước; hiện diện tại nhiều hội chợ,
+                                        triển lãm quốc tế như Sourcing At Magic (Las Vegas).</p>
+                                </div>
+                                <div class="bk-steps">
+                                    <div class="bk-step"><b></b>
+                                        <h4>Bối cảnh</h4>
+                                        <p>Đơn hàng số lượng lớn, cần chất lượng đồng đều và đúng tiến độ.</p>
+                                    </div>
+                                    <div class="bk-step"><b></b>
+                                        <h4>Giải pháp</h4>
+                                        <p>Hệ thống sản xuất đồng bộ, gia công linh hoạt theo từng mẫu.</p>
+                                    </div>
+                                    <div class="bk-step"><b></b>
+                                        <h4>Kết quả</h4>
+                                        <p><span class="bk-todo">[Bổ sung sau]</span></p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bk-page bk-right bk-right--d">
+                                <div class="bk-tall">
+                                    {{ photo('5.1.jpg', 'Ảnh 05-1') }}
+                                    {{ photo('5.2.jpg', 'Ảnh 05-2') }}
+                                    {{ photo('5.3.jpg', 'Ảnh 05-3') }}
+                                </div>
+                                <div class="bk-capt">
+                                    <p>Những dự án và hội chợ, triển lãm tiêu biểu của TUẤN.</p>
+                                </div>
+                            </div>
+                        </article>
+                    </div>
+                </section>
+
+                <!-- ============ 06. THÔNG TIN LIÊN HỆ (xanh) ============ -->
+                {% set ch = chapters[4] %}
+                <section class="sp-panel" id="{{ ch.id }}" data-title="{{ ch.title }}" data-bg="{{ ch.bg }}">
+                    <div class="sp-inner">
+                        <article class="bk bk--blue">
+                            <div class="bk-page bk-left">
+                                <h2 class="bk-title bk-title--box">Thông tin Liên hệ</h2>
+                                <ul class="bk-contact">
+                                    <li><i class="fa-solid fa-location-dot"></i>
+                                        <div>
+                                            <h4>Địa chỉ</h4>
+                                            <p>282A Hòa Bình, Phường Phú Thạnh, TP. Hồ Chí Minh</p>
+                                        </div>
+                                    </li>
+                                    <li><i class="fa-solid fa-phone"></i>
+                                        <div>
+                                            <h4>Điện thoại</h4>
+                                            <p>+84 919 772 295</p>
+                                        </div>
+                                    </li>
+                                    <li><i class="fa-regular fa-clock"></i>
+                                        <div>
+                                            <h4>Giờ mở cửa</h4>
+                                            <p>Thứ Hai – Chủ Nhật · 9:00 – 21:00</p>
+                                        </div>
+                                    </li>
+                                    <li><i class="fa-regular fa-envelope"></i>
+                                        <div>
+                                            <h4>Email, website</h4>
+                                            <p><span class="bk-todo">[Bổ sung email và website chính thức]</span>
+                                            </p>
+                                        </div>
+                                    </li>
+                                </ul>
+                                <a class="bk-btn" href="{{ url_for('main.contact') }}">LIÊN HỆ NGAY <span
+                                        aria-hidden="true">→</span></a>
+                            </div>
+                            <div class="bk-page bk-right bk-right--e">
+                                {{ photo('6.1.jpg', 'Ảnh 06-1 · Cửa hàng / nhà xưởng', 'bk-big') }}
+                                <div class="bk-row">
+                                    <figure class="bk-photo bk-video">
+                                        <video src="{{ url_for('static', filename='images/videos/baohanh.mp4') }}" muted
+                                            loop playsinline autoplay preload="metadata"></video>
+                                    </figure>
+                                    <figure class="bk-photo bk-video">
+                                        <video src="{{ url_for('static', filename='images/videos/cuahang.mp4') }}" muted
+                                            loop playsinline autoplay preload="metadata"></video>
+                                    </figure>
+                                </div>
+                            </div>
+                        </article>
+                    </div>
+                </section>
+
             </div>
         </div>
+        <!-- thanh tiến trình nằm trên dải hoa văn dưới của cuốn chiếu -->
+        <div class="sp-controls">
+            <span id="currentChapter">01 / {{ '%02d' % (chapters|length) }}</span>
+            <nav class="sp-dots" aria-label="Các mục">
+                {% for c in chapters %}<a href="#{{ c.id }}" aria-label="{{ c.title }}"></a>{% endfor %}
+            </nav>
+            <div class="sp-progress">
+                <div id="chapterProgressBar"></div>
+            </div>
+            <span id="currentTitle" class="sp-current-title">{{ chapters[0].title }}</span>
+            <a class="sp-hint" href="{{ url_for('main.home') }}">TRANG CHỦ</a>
+        </div>
+    </div>
     </div>
 </main>
 
@@ -325,7 +319,6 @@
                 alt="Giày TUẤN"></h1>
         <p class="sp-cover-sub">Từ cảm hứng di sản đến hành trình kiến tạo giá trị.</p>
         <button type="button" class="sp-enter" id="spEnter">KHÁM PHÁ <span aria-hidden="true">↗</span></button>
-        <p class="sp-cover-hint">NHẤN ĐỂ BẮT ĐẦU HÀNH TRÌNH</p>
     </div>
     <button type="button" class="sp-skip" id="spSkip" hidden>BỎ QUA <span aria-hidden="true">↗</span></button>
 </section>

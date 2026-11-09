@@ -1,0 +1,120 @@
+{% from 'partials/macros.html' import csrf %}
+
+{# ---- Giày monk strap 2 khóa (vẽ theo ảnh mẫu, mũi quay phải) ---- #}
+{% macro shoe_monk() %}
+<svg class="auth-shoe auth-shoe--monk" viewBox="0 0 200 104" aria-hidden="true" focusable="false">
+    <path fill="currentColor" d="M10 80V42C10 37 13 34 18 34C32 37 46 37 58 36C64 36 70 30 77 23C83 17 90 14 96 17C101 21 108 37 124 44C146 52 170 56 183 62C192 66 196 72 195 79V80Z"/>
+    <rect fill="currentColor" x="8" y="81.5" width="189" height="5" rx="2.5"/>
+    <rect fill="currentColor" x="10" y="85" width="44" height="9" rx="2"/>
+    <path class="cut" style="stroke-width:1.4" d="M18 34C16 40 16 48 17 58"/>
+    <path class="cut" style="stroke-width:1.4" d="M58 36C66 38 72 44 78 52C84 58 92 62 100 64"/>
+    <rect class="cut" style="stroke-width:1.8" x="72" y="37" width="12" height="10" rx="1.6" transform="rotate(-28 78 42)"/>
+    <path class="cut" style="stroke-width:1.8" d="M80 48C84 52 87 57 89 63"/>
+    <rect class="cut" style="stroke-width:1.8" x="105" y="52" width="11" height="10" rx="1.6" transform="rotate(-20 110 57)"/>
+    <path class="cut" style="stroke-width:1.8" d="M110 63L112 73"/>
+</svg>
+{% endmacro %}
+
+{# ---- Giày cao gót gót loe, mũi nhọn (theo mẫu sản phẩm TUẤN, mũi quay phải) ---- #}
+{% macro shoe_pump() %}
+<svg class="auth-shoe auth-shoe--pump" viewBox="0 0 201 100" aria-hidden="true" focusable="false">
+    <path fill="currentColor" d="M13 2C4 14 0 26 1 38C2 46 5 50 10 54C15 62 19 68 19.5 74C18 82 15 88 13.5 92.5L30.5 93.5C30 88 28.5 82 28.5 76C28.5 68 32 62 39 61C52 66 62 72 72 77C90 86 112 94 133 96L160 96C176 95 190 90 199 80C192 72 178 67 163 63.5C155 61 147 58 139 57C122 55 104 50 86 41C66 31 44 17 28 8C22 5 17 3 13 2Z"/>
+    <path class="inner" d="M28 8C44 17 66 31 86 41C104 50 122 55 139 57L135 63C118 60 100 55 84 47C62 36 40 22 20 9Z"/>
+    <path class="cut" style="stroke-width:1.2" d="M14 37C24 31 36 29 45 32"/>
+    <circle class="cut" style="stroke-width:1.2" cx="48" cy="32.5" r="2.4"/>
+    <path class="cut" style="stroke-width:1.2;stroke-dasharray:2 2.2" d="M139 60C147 66 154 78 159 94"/>
+</svg>
+{% endmacro %}
+
+{% macro auth_card(mode='login', form=none) %}
+{% set f = form or {} %}
+<div class="auth-fit">
+    <div class="auth-stage" id="authStage" data-mode="{{ mode }}"
+         data-login-url="{{ url_for('auth.login') }}" data-register-url="/register"
+         data-title-login="Đăng nhập - TUẤN" data-title-register="Đăng ký - TUẤN">
+
+        {# ===== Form đăng nhập ===== #}
+        <section class="auth-panel auth-panel--login" aria-labelledby="authLoginTitle"{% if mode != 'login' %} inert aria-hidden="true"{% endif %}>
+            <form id="loginForm" class="auth-form" method="POST">
+                {{ csrf() }}
+                <h2 class="auth-title" id="authLoginTitle">Đăng nhập</h2>
+                <p class="auth-sub">Dùng số điện thoại của bạn</p>
+
+                <div class="auth-field">
+                    <label class="auth-sr" for="phone_number">Số điện thoại</label>
+                    <input type="tel" name="phone" id="phone_number" class="auth-input"
+                           placeholder="Số điện thoại" autocomplete="tel" inputmode="tel" required>
+                </div>
+
+                <div class="auth-field">
+                    <label class="auth-sr" for="password">Mật khẩu</label>
+                    <input type="password" name="password" id="password" class="auth-input"
+                           placeholder="Mật khẩu" autocomplete="current-password" required>
+                </div>
+
+                <div class="auth-row">
+                    <label class="auth-check">
+                        <input type="checkbox" data-toggle-password="#password">
+                        Hiện mật khẩu
+                    </label>
+                    <a class="auth-link" href="/forgot-password">Quên mật khẩu?</a>
+                </div>
+
+                <button type="submit" class="auth-btn" id="loginBtn" data-loading-text="Đang đăng nhập...">Đăng nhập</button>
+            </form>
+        </section>
+
+        {# ===== Form đăng ký ===== #}
+        <section class="auth-panel auth-panel--register" aria-labelledby="authRegisterTitle"{% if mode != 'register' %} inert aria-hidden="true"{% endif %}>
+            <form id="registerForm" class="auth-form" method="POST">
+                {{ csrf() }}
+                <h2 class="auth-title" id="authRegisterTitle">Tạo tài khoản</h2>
+                <p class="auth-sub">Đăng ký bằng số điện thoại</p>
+
+                <div class="auth-field">
+                    <label class="auth-sr" for="reg_phone">Số điện thoại</label>
+                    <input type="tel" name="phone" id="reg_phone" class="auth-input"
+                           value="{{ f.get('phone', '') }}" placeholder="Số điện thoại"
+                           maxlength="20" autocomplete="tel" inputmode="tel" required>
+                </div>
+
+                <div class="auth-field">
+                    <label class="auth-sr" for="reg_password">Mật khẩu (tối thiểu 8 ký tự)</label>
+                    <input type="password" name="password" id="reg_password" class="auth-input"
+                           placeholder="Mật khẩu (tối thiểu 8 ký tự)" minlength="8"
+                           autocomplete="new-password" required>
+                </div>
+
+                <div class="auth-field is-last">
+                    <label class="auth-sr" for="reg_confirm_password">Xác nhận mật khẩu</label>
+                    <input type="password" name="confirm_password" id="reg_confirm_password" class="auth-input"
+                           placeholder="Nhập lại mật khẩu" minlength="8"
+                           autocomplete="new-password" required>
+                </div>
+
+                <button type="submit" class="auth-btn" data-loading-text="Đang tạo tài khoản...">Tạo tài khoản</button>
+            </form>
+        </section>
+
+        {# ===== Bảng trượt ở giữa + 2 icon giày da ===== #}
+        <aside class="auth-switch">
+            <span class="auth-deco auth-deco--t" aria-hidden="true">{{ shoe_monk() }}</span>
+            <span class="auth-deco auth-deco--b" aria-hidden="true">{{ shoe_pump() }}</span>
+
+            {# hiện khi đang ở trang đăng nhập #}
+            <div class="auth-copy auth-copy--to-register" data-show-in="login"{% if mode != 'login' %} inert aria-hidden="true"{% endif %}>
+                <h2 class="auth-copy-title">Xin chào!</h2>
+                <p class="auth-copy-text">Chưa có tài khoản? Đăng ký để mua sắm nhanh hơn và theo dõi đơn hàng của bạn.</p>
+                <a class="auth-btn auth-btn--ghost" href="/register" data-auth-go="register">Đăng ký</a>
+            </div>
+
+            {# hiện khi đang ở trang đăng ký #}
+            <div class="auth-copy auth-copy--to-login" data-show-in="register"{% if mode != 'register' %} inert aria-hidden="true"{% endif %}>
+                <h2 class="auth-copy-title">Chào mừng</h2>
+                <p class="auth-copy-text">Đã có tài khoản? Đăng nhập để tiếp tục mua sắm và xem lại đơn hàng.</p>
+                <a class="auth-btn auth-btn--ghost" href="{{ url_for('auth.login') }}" data-auth-go="login">Đăng nhập</a>
+            </div>
+        </aside>
+    </div>
+</div>
+{% endmacro %}

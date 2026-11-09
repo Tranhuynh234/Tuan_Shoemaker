@@ -1,60 +1,10 @@
 {% extends 'base.html' %}
-{% from 'partials/macros.html' import csrf %}
+{% from 'partials/auth_card.html' import auth_card %}
 
 {% block title %}Đăng nhập - TUẤN{% endblock %}
 
 {% block content %}
 <div class="auth-wrap page-block">
-    <div class="auth-card">
-        <div class="auth-header">
-            <h2>Đăng nhập</h2>
-        </div>
-
-        <form id="loginForm" method="POST">
-            {{ csrf() }}
-
-            <div class="form-group">
-                <label for="phone_number">Số điện thoại</label>
-                <input 
-                    type="tel" 
-                    name="phone" 
-                    id="phone_number" 
-                    class="form-control" 
-                    placeholder="Nhập số điện thoại" 
-                    autocomplete="tel" 
-                    required
-                >
-            </div>
-
-            <div class="form-group">
-                <label for="password">Mật khẩu</label>
-                <input 
-                    type="password" 
-                    name="password" 
-                    id="password" 
-                    class="form-control" 
-                    placeholder="Nhập mật khẩu" 
-                    autocomplete="current-password" 
-                    required
-                >
-                <label class="show-password">
-                    <input type="checkbox" data-toggle-password="#password">
-                    Hiện mật khẩu
-                </label>
-            </div>
-
-            <button type="submit" class="auth-submit" id="loginBtn">
-                Đăng nhập
-            </button>
-
-            <div class="auth-links">
-                <a href="/forgot-password">Quên mật khẩu?</a>
-                <p>
-                    Chưa có tài khoản? 
-                    <a href="/register">Đăng ký ngay</a>
-                </p>
-            </div>
-        </form>
-    </div>
+    {{ auth_card('login') }}
 </div>
 {% endblock %}

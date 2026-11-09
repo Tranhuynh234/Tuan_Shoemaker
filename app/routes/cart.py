@@ -160,9 +160,9 @@ def guest_checkout():
     if not current_app.config.get("TESTING", False):
         # Không cho phép gửi đơn hàng hàng loạt từ cùng IP.
         from app.services import rate_limit_service
-        if rate_limit_service.is_blocked("guest_order_ip", ip, current_app.config["GUEST_ORDER_MAX_PER_IP_HOUR"], 3600):
+        if rate_limit_service.is_blocked("guest_order_ip", ip, current_app.config.get("GUEST_ORDER_MAX_PER_IP_HOUR", 20), 3600):
             return jsonify({"error": "Bạn đặt hàng quá nhanh. Vui lòng thử lại sau."}), 429
-        if rate_limit_service.is_blocked("guest_order_phone", phone, current_app.config["GUEST_ORDER_MAX_PER_PHONE_HOUR"], 3600):
+        if rate_limit_service.is_blocked("guest_order_phone", phone, current_app.config.get("GUEST_ORDER_MAX_PER_PHONE_HOUR", 5), 3600):
             return jsonify({"error": "Số điện thoại đã đặt nhiều đơn trong thời gian ngắn."}), 429
     try:
         subtotal = Decimal(0)
